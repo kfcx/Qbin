@@ -97,6 +97,7 @@ docker run -it -p 8000:8000 \
 
 ## 🚀 TODO
 - [ ] 实现端到端加密
+- [ ] 实现对渲染界面Markdown、音频、视频预览
 - [x] 增加个人中心面板
 - [x] 增加 MarkDown 编辑器
 - [x] 增加 Code 编辑器
