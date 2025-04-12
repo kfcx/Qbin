@@ -569,6 +569,10 @@ router
     const token = await ctx.cookies.get("token");
     return new Response(ctx, 200, "success", { token: token });
   })
+  .get("/api/user/info", async (ctx) => {
+    const data = await ctx.state.session?.get("user");
+    return new Response(ctx, 200, "success", data);
+  })
   .get("/api/user/storage", async (ctx) => {
     const user = ctx.state.session?.get("user");
     if (!user || !user.email) return new Response(ctx, 401, "请先登录");

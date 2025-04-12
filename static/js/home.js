@@ -1,3 +1,42 @@
+function getStyleFromHash(input) {
+    const hash = cyrb53(input);
+    const styleCounts = {
+        face: 16,
+        nose: 14,
+        mouth: 20,
+        eyes: 14,
+        eyebrows: 16,
+        glasses: 14,
+        hair: 58,
+        beard: 16,
+        details: 13,
+        accessories: 14
+    };
+    function getStyleForPart(partName, maxValue) {
+        const partHash = cyrb53(partName + input + hash);
+        return Math.floor(partHash % maxValue);
+    }
+    const styleConfig = {
+        face: getStyleForPart('face', styleCounts.face),
+        nose: getStyleForPart('nose', styleCounts.nose),
+        mouth: getStyleForPart('mouth', styleCounts.mouth),
+        eyes: getStyleForPart('eyes', styleCounts.eyes),
+        eyebrows: getStyleForPart('eyebrows', styleCounts.eyebrows),
+        glasses: getStyleForPart('glasses', styleCounts.glasses),
+        hair: getStyleForPart('hair', styleCounts.hair),
+        beard: getStyleForPart('beard', styleCounts.beard),
+        details: getStyleForPart('details', styleCounts.details),
+        accessories: getStyleForPart('accessories', styleCounts.accessories),
+        flip: 0,
+        color: "rgba(255, 0, 0, 0)", // 默认颜色
+        shape: "none" // 默认形状
+    };
+    const jsonString = JSON.stringify(styleConfig);
+    const base64Encoded = btoa(jsonString);
+    const url = `https://notion-avatar.app/api/svg/${base64Encoded}`;
+    return url;
+}
+
 class QBinHome {
     constructor() {
         this.dataLoaded = {
@@ -35,6 +74,7 @@ class QBinHome {
         this.initializeInfiniteScroll();
         this.initializeContextMenu();
         this.initializeSearch();
+        this.initializeUserInfo(); // 初始化用户信息
     }
 
     initializeNavigation() {
@@ -1529,6 +1569,56 @@ class QBinHome {
         }
 
         return toast;
+    }
+
+    async initializeUserInfo() {
+        try {
+            const response = await fetch('/api/user/info', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            const username = data.data?.name;
+            const email = data.data?.email;
+            this.updateUserProfile({name: username, avatar: getStyleFromHash(username), email: email});
+        } catch (error) {
+            console.error('Failed to load user info:', error);
+            const defaultUsername = "用户名";
+            this.updateUserProfile({
+                name: defaultUsername,
+                avatar: getStyleFromHash("Error")
+            });
+        }
+    }
+
+    updateUserProfile(userData) {
+        const usernameElement = document.querySelector('.sidebar-footer .user-info .username');
+        if (usernameElement && userData.name) {
+            usernameElement.textContent = userData.name;
+        }
+        const avatarElement = document.querySelector('.sidebar-footer .user-avatar img');
+        if (avatarElement && userData.avatar) {
+            avatarElement.src = userData.avatar;
+            avatarElement.onerror = function() {
+                // 如果头像加载失败，使用基于用户名的头像
+                this.src = getStyleFromHash(userData.name || "Demo User");
+                // 如果生成的头像也加载失败，使用默认头像
+                this.onerror = function() {
+                    this.src = "/static/img/default-avatar.png";
+                    this.onerror = null; // 防止无限循环
+                };
+            };
+        }
+        const emailElement = document.createElement('span');
+        emailElement.className = 'user-email';
+        emailElement.textContent = userData.email || '';
+        document.querySelector('.sidebar-footer .user-info').appendChild(emailElement);
     }
 }
 
