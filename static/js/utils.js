@@ -40,6 +40,13 @@ function getCookie(name) {
   }
   return null;
 }
+function formatSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 /**
  * 移动设备检测函数
  * @returns {boolean} true: 移动设备，false: 桌面设备
@@ -514,3 +521,202 @@ const API = {
         return messages[status] || '未知错误';
     },
 };
+const ClipboardUtil = {
+  copyToClipboard(text, options = {}) {
+    const { onSuccess, onError, onFallback } = options;
+
+    return new Promise((resolve, reject) => {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            if (typeof onSuccess === 'function') onSuccess(text);
+            resolve({ success: true, method: 'clipboardAPI', text });
+          })
+          .catch((error) => {
+            console.warn('Clipboard API失败，使用备用方法', error);
+            this._fallbackCopyToClipboard(text, { onSuccess, onError, onFallback })
+              .then(resolve)
+              .catch(reject);
+          });
+      } else {
+        // 对于不支持Clipboard API的设备或非安全上下文，使用备用方法
+        console.info("使用备用复制方案");
+        this._fallbackCopyToClipboard(text, { onSuccess, onError, onFallback })
+          .then(resolve)
+          .catch(reject);
+      }
+    });
+  },
+
+  _fallbackCopyToClipboard(text, { onSuccess, onError, onFallback }) {
+    return new Promise((resolve, reject) => {
+      try {
+        const textArea = document.createElement('textarea');
+
+        // 设置文本区域的样式，使其不可见
+        textArea.style.position = 'fixed';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.width = '2em';
+        textArea.style.height = '2em';
+        textArea.style.padding = '0';
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+        textArea.style.background = 'transparent';
+        textArea.style.opacity = '0';
+        textArea.style.zIndex = '-1';
+
+        // 设置文本内容
+        textArea.value = text;
+
+        // 将文本区域添加到DOM
+        document.body.appendChild(textArea);
+
+        // 选择文本
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, 99999); // 适用于移动设备
+
+        // 尝试执行复制命令
+        const successful = document.execCommand('copy');
+
+        // 移除临时文本区域
+        document.body.removeChild(textArea);
+
+        // 根据复制操作的结果处理回调
+        if (successful) {
+          if (typeof onSuccess === 'function') onSuccess(text);
+          resolve({ success: true, method: 'execCommand', text });
+        } else {
+          const error = new Error('execCommand复制失败');
+          if (typeof onFallback === 'function') onFallback(text);
+          if (typeof onError === 'function') onError(error, text);
+          resolve({ success: false, method: 'execCommand', error, text });
+        }
+      } catch (error) {
+        console.error('复制到剪贴板失败:', error);
+        if (typeof onFallback === 'function') onFallback(text);
+        if (typeof onError === 'function') onError(error, text);
+        reject({ success: false, error, text });
+      }
+    });
+  },
+
+  createManualCopyUI(text, options = {}) {
+    const config = {
+      title: '手动复制',
+      message: '自动复制失败，请手动复制以下内容:',
+      copyButtonText: '复制',
+      closeButtonText: '关闭',
+      ...options
+    };
+
+    const uniqueId = 'clipboard-copy-input-' + Date.now();
+
+    // 创建模态框元素
+    const modal = document.createElement('div');
+    modal.className = 'clipboard-modal';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    `;
+
+    modal.innerHTML = `
+      <div class="clipboard-modal-content" style="
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 90%;
+        width: 500px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      ">
+        <h3 style="margin-top: 0; color: #333;">${config.title}</h3>
+        <p>${config.message}</p>
+        <div style="display: flex; margin: 15px 0;">
+          <input type="text" value="${text.replace(/"/g, '&quot;')}" readonly id="${uniqueId}" style="
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+          ">
+          <button class="clipboard-copy-btn" id="${uniqueId}-btn" style="
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+          ">${config.copyButtonText}</button>
+        </div>
+        <button class="clipboard-close-btn" style="
+          background: #f5f5f5;
+          border: 1px solid #ddd;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          float: right;
+        ">${config.closeButtonText}</button>
+      </div>
+    `;
+
+    // 添加事件监听
+    setTimeout(() => {
+      const linkInput = document.getElementById(uniqueId);
+      const copyBtn = document.getElementById(`${uniqueId}-btn`);
+      const closeBtn = modal.querySelector('.clipboard-close-btn');
+
+      if (linkInput) {
+        linkInput.focus();
+        linkInput.select();
+      }
+
+      if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+          if (linkInput) {
+            linkInput.select();
+            document.execCommand('copy');
+
+            // 触发自定义事件
+            modal.dispatchEvent(new CustomEvent('manualCopy', { detail: { text } }));
+          }
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          if (document.body.contains(modal)) {
+            document.body.removeChild(modal);
+
+            // 触发自定义事件
+            modal.dispatchEvent(new CustomEvent('close'));
+          }
+        });
+      }
+
+      // 点击模态框外部关闭
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          if (document.body.contains(modal)) {
+            document.body.removeChild(modal);
+
+            // 触发自定义事件
+            modal.dispatchEvent(new CustomEvent('close'));
+          }
+        }
+      });
+    }, 0);
+
+    return modal;
+  }
+};
+

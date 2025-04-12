@@ -85,6 +85,9 @@ class QBinMDEditor extends QBinEditorBase {
                 MathJax: window.MathJax,
             },
             engine: {
+                global: {
+                    flowSessionContext: true,
+                },
                 syntax: {
                     codeBlock: {
                         theme: 'twilight',

@@ -257,7 +257,20 @@ class QBinHome {
                 e.stopPropagation();
                 if (this.selectedItem) {
                     const url = `${window.location.origin}/r/${this.selectedItem.fkey}/${this.selectedItem.pwd || ''}`;
-                    this.copyToClipboard(url);
+
+                    ClipboardUtil.copyToClipboard(url)
+                      .then(result => {
+                        if (result.success) {
+                          this.showToast("复制成功！");
+                        } else {
+                          this.showToast("复制失败，请手动复制", "error");
+                          const modal = ClipboardUtil.createManualCopyUI(url);
+                          document.body.appendChild(modal);
+                          modal.addEventListener('manualCopy', () => {
+                            this.showToast("已手动复制");
+                          });
+                        }
+                      });
                 }
                 this.hideContextMenu();
             });
@@ -942,7 +955,7 @@ class QBinHome {
                         <span class="file-icon">${fileIcon}</span>
                         ${fileName}
                     </span>
-                    <span class="file-size">${this.formatSize(item.len)}</span>
+                    <span class="file-size">${formatSize(item.len)}</span>
                     <span class="file-time">${this.formatDate(item.time)}</span>
                     <span class="file-actions">
                         <button class="action-btn" title="更多操作" data-fkey="${item.fkey}" data-pwd="${item.pwd}">
@@ -1039,7 +1052,7 @@ class QBinHome {
                     </button>
                     <div class="file-icon">${fileIcon}</div>
                     <div class="file-name">${fileName}</div>
-                    <div class="file-meta">${this.formatSize(item.len)}</div>
+                    <div class="file-meta">${formatSize(item.len)}</div>
                 </div>
             `;
 
@@ -1309,14 +1322,6 @@ class QBinHome {
         }
     }
 
-    formatSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
     formatDate(timestamp) {
         if (!timestamp) return 'Never';
         return new Date(timestamp * 1000).toLocaleString();
@@ -1352,7 +1357,6 @@ class QBinHome {
         const copyBtn = document.getElementById('copy-token-btn');
         const tokenInput = document.getElementById('token-input');
 
-        // Generate token button
         if (generateBtn) {
             generateBtn.addEventListener('click', async () => {
                 try {
@@ -1389,21 +1393,14 @@ class QBinHome {
             });
         }
 
-        // Copy button
         if (copyBtn) {
             copyBtn.addEventListener('click', () => {
                 if (!tokenInput.value) return;
 
-                // Copy to clipboard
                 tokenInput.select();
                 document.execCommand('copy');
-                // Deselect the text
                 window.getSelection().removeAllRanges();
-
-                // Show feedback
                 this.showToast('Token已复制到剪贴板', 'success');
-
-                // Visual feedback on the button
                 copyBtn.classList.add('active');
                 setTimeout(() => copyBtn.classList.remove('active'), 1000);
             });
@@ -1532,117 +1529,6 @@ class QBinHome {
         }
 
         return toast;
-    }
-
-    copyToClipboard(text) {
-        // 尝试使用现代Clipboard API
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text)
-                .then(() => this.showToast('链接已复制到剪贴板'))
-                .catch(() => {
-                    // 如果Clipboard API失败，回退到备用方法
-                    this.fallbackCopyToClipboard(text);
-                });
-        } else {
-            // 对于不支持Clipboard API的设备或非安全上下文，使用备用方法
-            console.log("回退方案")
-            this.fallbackCopyToClipboard(text);
-        }
-    }
-
-    // 备用的复制到剪贴板方法
-    fallbackCopyToClipboard(text) {
-        try {
-            // 创建一个临时的文本区域元素
-            const textArea = document.createElement('textarea');
-
-            // 设置文本区域的样式，使其不可见
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            textArea.style.width = '2em';
-            textArea.style.height = '2em';
-            textArea.style.padding = '0';
-            textArea.style.border = 'none';
-            textArea.style.outline = 'none';
-            textArea.style.boxShadow = 'none';
-            textArea.style.background = 'transparent';
-            textArea.style.opacity = '0';
-
-            // 设置文本内容
-            textArea.value = text;
-
-            // 将文本区域添加到DOM
-            document.body.appendChild(textArea);
-
-            // 选择文本
-            textArea.select();
-            textArea.setSelectionRange(0, 99999); // 适用于移动设备
-
-            // 尝试执行复制命令
-            const successful = document.execCommand('copy');
-
-            // 移除临时文本区域
-            document.body.removeChild(textArea);
-
-            // 根据复制操作的结果显示提示
-            if (successful) {
-                this.showToast('链接已复制到剪贴板');
-            } else {
-                // 如果execCommand失败，尝试提供链接给用户手动复制
-                this.showShareableLink(text);
-            }
-        } catch (err) {
-            console.error('复制到剪贴板失败:', err);
-            // 如果发生异常，提供链接给用户手动复制
-            this.showShareableLink(text);
-        }
-    }
-
-    // 当自动复制失败时，显示一个可分享链接给用户手动复制
-    showShareableLink(link) {
-        // 创建一个模态对话框，显示链接并允许用户手动复制
-        const modal = document.createElement('div');
-        modal.className = 'share-modal';
-        modal.innerHTML = `
-            <div class="share-content">
-                <h3>分享链接</h3>
-                <p>请手动复制以下链接:</p>
-                <div class="link-container">
-                    <input type="text" value="${link}" readonly id="manual-copy-link">
-                    <button id="manual-copy-btn">复制</button>
-                </div>
-                <button class="close-btn">关闭</button>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        // 链接输入框获得焦点并全选
-        const linkInput = document.getElementById('manual-copy-link');
-        linkInput.focus();
-        linkInput.select();
-
-        // 添加复制按钮事件
-        const copyBtn = document.getElementById('manual-copy-btn');
-        copyBtn.addEventListener('click', () => {
-            linkInput.select();
-            document.execCommand('copy');
-            this.showToast('链接已复制');
-        });
-
-        // 添加关闭按钮事件
-        const closeBtn = modal.querySelector('.close-btn');
-        closeBtn.addEventListener('click', () => {
-            document.body.removeChild(modal);
-        });
-
-        // 点击模态框外部关闭
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                document.body.removeChild(modal);
-            }
-        });
     }
 }
 

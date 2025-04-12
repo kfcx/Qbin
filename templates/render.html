@@ -6,6 +6,8 @@
     <meta charset=UTF-8>
     <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name=viewport>
     <link href=/static/css/render.css rel=stylesheet>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/cherry-markdown@0.8.58/dist/cherry-markdown.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
     <script>
         (function() {
             function applyTheme() {
@@ -46,6 +48,8 @@
             }
         })();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cherry-markdown@0.8.58/dist/cherry-markdown.core.js"></script>
     <script src=/static/js/utils.js defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" async></script>
     <script src=/static/js/render.js defer></script>
@@ -53,26 +57,19 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4a6cf7">
     <meta name="application-name" content="QBin">
-
-    <!-- iOS PWA 特定标签 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="QBin">
-
-    <!-- iOS 图标 -->
     <link rel="apple-touch-icon" href="/static/img/apple-icon-180.png">
     <link rel="apple-touch-icon" sizes="152x152" href="/static/img/apple-icon-152.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-icon-180.png">
     <link rel="apple-touch-icon" sizes="167x167" href="/static/img/apple-icon-167.png">
-
-    <!-- PWA 处理脚本 -->
     <script src=/static/js/pwa-handler.js defer></script>
 </head>
 <body>
 <div class="header" id="buttonBar">
-    <div id="themeToggle" class="theme-toggle" title="Toggle theme"></div>
 </div>
-<div class="content" id="contentArea"></div>
+<div id="qbin-viewer" class="content"></div>
 <template id="loadingTemplate">
     <div class="loading-container">
         <div class="loading-spinner"></div>

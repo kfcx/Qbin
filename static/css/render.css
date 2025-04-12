@@ -14,7 +14,7 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
     --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 2px 12px rgba(0, 0, 0, 0.08);
-    
+
     color-scheme: light;
 }
 
@@ -34,7 +34,7 @@ html[data-theme="dark"] {
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
     --shadow-lg: 0 2px 12px rgba(0, 0, 0, 0.2);
-    
+
     color-scheme: dark;
 }
 
@@ -54,7 +54,7 @@ html[data-theme="dark"] {
         --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
         --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
         --shadow-lg: 0 2px 12px rgba(0, 0, 0, 0.2);
-        
+
         color-scheme: dark;
     }
 }
@@ -172,12 +172,11 @@ body {
 
 .content {
     flex: 1;
-    padding: 16px;
+    padding: 0; /* 移除外部容器的内边距 */
     box-sizing: border-box;
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     width: 100%;
-    /* 添加弹性布局 */
     display: flex;
     flex-direction: column;
 }
@@ -205,15 +204,6 @@ body {
 /* 焦点状态使用更柔和的阴影效果 */
 #viewer:focus {
     box-shadow: var(--shadow-lg), 0 0 0 1px rgba(var(--primary), 0.1);
-}
-
-#imageViewer {
-    max-width: 100%;
-    max-height: calc(100vh - 140px);
-    margin: 0 auto;
-    display: block;
-    border-radius: 8px; /* 圆角 */
-    box-shadow: var(--shadow-md);
 }
 
 .file-info {
@@ -673,7 +663,7 @@ html[data-theme="dark"] .qrcode-wrapper {
         padding: 24px 20px;
         max-width: 320px;
     }
-    
+
     .password-dialog .lock-icon {
         width: 48px;
         height: 48px;
@@ -697,5 +687,324 @@ html[data-theme="dark"] .qrcode-wrapper {
 #passwordDialog.active,
 #loadingContainer.active {
     display: block;
+}
+
+/* 全设备媒体元素自适应显示 - 更全面的选择器 */
+.cherry-markdown img,
+.cherry-markdown video,
+.cherry-markdown iframe,
+.cherry-previewer img,
+.cherry-previewer video,
+.cherry-previewer iframe,
+.cherry-markdown__editor--preview img,
+.cherry-markdown__editor--preview video,
+.cherry-markdown__editor--preview iframe,
+.cherry-editor img,
+.cherry-editor video,
+.cherry-editor iframe,
+#qbin-viewer img,
+#qbin-viewer video,
+#qbin-viewer iframe,
+/* 额外覆盖特定场景 */
+.cherry-markdown .cherry-preview img,
+.cherry-markdown .cherry-preview video,
+.cherry-markdown .cherry-preview iframe {
+    max-width: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+}
+
+/* 特别处理视频和iframe容器 */
+.cherry-video-container,
+.cherry-markdown .cherry-video-container,
+.cherry-markdown iframe[src*="youtube"],
+.cherry-markdown iframe[src*="vimeo"],
+.cherry-previewer .cherry-video-container,
+.cherry-previewer iframe[src*="youtube"],
+.cherry-previewer iframe[src*="vimeo"],
+.cherry-markdown__editor--preview .cherry-video-container,
+.cherry-markdown__editor--preview iframe[src*="youtube"],
+.cherry-markdown__editor--preview iframe[src*="vimeo"] {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    height: auto !important;
+    aspect-ratio: 16/9;
+    overflow: hidden !important;
+}
+
+/* 确保居中对齐的内容容器也受限 */
+.cherry-markdown [data-type="center"] img,
+.cherry-markdown [data-type="center"] video,
+.cherry-markdown [data-type="center"] iframe,
+.cherry-previewer [data-type="center"] img,
+.cherry-previewer [data-type="center"] video,
+.cherry-previewer [data-type="center"] iframe {
+    margin: 0 auto !important;
+    max-width: 100% !important;
+}
+
+/* 修复在某些浏览器中可能出现的表格内媒体元素问题 */
+.cherry-markdown table img,
+.cherry-markdown table video,
+.cherry-previewer table img,
+.cherry-previewer table video {
+    max-width: 100% !important;
+}
+
+/* 优化qbin-viewer区域 */
+#qbin-viewer {
+    flex: 1;
+    padding: 0; /* 移除外层容器的内边距 */
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+}
+
+/* 确保Cherry Markdown内容区域占满空间 */
+.cherry-markdown, 
+.cherry-editor, 
+.cherry-previewer {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* 为内部渲染内容添加适当边距 */
+.cherry-markdown__editor--preview,
+.cherry-previewer,
+.cherry-markdown .cherry-preview,
+#qbin-viewer > .cherry-previewer {
+    padding: 24px !important; /* 内容区域保留舒适的边距 */
+    max-width: 960px !important; /* 限制内容最大宽度，提高可读性 */
+    margin: 0 auto !important; /* 在父容器中居中 */
+}
+
+/* 移动端适配 - 较小的边距 */
+@media (max-width: 768px) {
+    .cherry-markdown__editor--preview,
+    .cherry-previewer,
+    .cherry-markdown .cherry-preview,
+    #qbin-viewer > .cherry-previewer {
+        padding: 16px !important;
+    }
+}
+
+/* 媒体元素自适应 */
+.cherry-markdown img,
+.cherry-previewer img,
+.cherry-markdown__editor--preview img,
+.cherry-markdown video,
+.cherry-previewer video,
+.cherry-markdown__editor--preview video,
+.cherry-markdown iframe,
+.cherry-previewer iframe,
+.cherry-markdown__editor--preview iframe,
+#qbin-viewer img,
+#qbin-viewer video,
+#qbin-viewer iframe {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+/* 现代化音频播放器样式 */
+.modern-audio-player {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 16px 20px;
+    max-width: 500px;
+    margin: 20px auto;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.modern-audio-player:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.audio-player-icon {
+    font-size: 28px;
+    margin-right: 16px;
+    color: var(--primary);
+    width: 48px;
+    height: 48px;
+    background: rgba(var(--primary-rgb), 0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.audio-player-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.audio-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modern-audio-control {
+    width: 100%;
+    height: 36px;
+    outline: none;
+}
+
+/* 自定义音频控件样式 - 适配浏览器默认控件 */
+.modern-audio-control::-webkit-media-controls-panel {
+    background: var(--surface);
+}
+
+.modern-audio-control::-webkit-media-controls-play-button,
+.modern-audio-control::-webkit-media-controls-volume-slider,
+.modern-audio-control::-webkit-media-controls-timeline {
+    filter: saturate(1.2);
+}
+
+/* 移动设备适配 */
+@media (max-width: 768px) {
+    .modern-audio-player {
+        padding: 12px 16px;
+    }
+    
+    .audio-player-icon {
+        font-size: 22px;
+        width: 40px;
+        height: 40px;
+        margin-right: 12px;
+    }
+    
+    .audio-title {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+}
+
+/* 优化现代化错误提示组件 */
+.modern-error-container {
+    display: flex;
+    flex-direction: row; /* 桌面端使用水平布局 */
+    align-items: center;
+    justify-content: flex-start;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 40px;
+    margin: 40px auto;
+    width: 80%; /* 更宽的显示区域 */
+    max-width: 800px; /* 增加最大宽度 */
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 77, 79, 0.15);
+    animation: errorFadeIn 0.3s ease-out;
+    text-align: left; /* 文本左对齐 */
+}
+
+@keyframes errorFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error-icon-wrapper {
+    margin-right: 32px; /* 水平间距 */
+    margin-bottom: 0; /* 移除底部间距 */
+    flex-shrink: 0; /* 防止图标被压缩 */
+}
+
+.error-icon {
+    width: 80px; /* 更大的图标 */
+    height: 80px;
+    color: var(--error);
+    animation: errorPulse 2s ease-in-out infinite;
+}
+
+@keyframes errorPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.error-content {
+    flex: 1;
+}
+
+.error-title {
+    color: var(--error);
+    font-size: 24px; /* 更大的标题 */
+    font-weight: 500;
+    margin: 0 0 16px 0;
+}
+
+.error-message {
+    color: var(--text);
+    font-size: 16px; /* 更大的文本 */
+    line-height: 1.6;
+    margin: 0;
+    word-break: break-word;
+}
+
+/* 移动端适配 - 转为垂直布局 */
+@media (max-width: 768px) {
+    .modern-error-container {
+        flex-direction: column; /* 移动端改回垂直布局 */
+        padding: 24px;
+        margin: 16px auto;
+        text-align: center;
+        width: calc(100% - 32px); /* 减去左右外边距 */
+    }
+    
+    .error-icon-wrapper {
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+    
+    .error-icon {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .error-title {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+    
+    .error-message {
+        font-size: 14px;
+    }
 }
 
