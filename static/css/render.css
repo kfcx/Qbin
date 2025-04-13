@@ -74,105 +74,124 @@ body {
 }
 
 .header {
-    padding: 12px 20px; /* 减小内边距 */
+    padding: 12px 20px;
     display: flex;
-    justify-content: flex-end;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     background: var(--surface);
-    background-color: rgba(var(--surface), 0.9);
     border-bottom: 1px solid var(--divider);
-    backdrop-filter: blur(10px); /* 毛玻璃效果 */
+    backdrop-filter: blur(10px);
     box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: padding 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .button {
-    padding: 6px 14px; /* 减小按钮内边距 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
     border-radius: 6px;
     border: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 450;
+    color: var(--text);
     background: var(--surface);
-    color: var(--text-secondary);
     cursor: pointer;
-    font-size: 13px;
     transition: all 0.2s ease;
-    min-width: 50px;
-    text-align: center;
-    font-weight: 450; /* 减小字重 */
-    letter-spacing: 0.2px;
-}
-
-.button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.button.processing {
     position: relative;
-    color: transparent !important;
-}
-
-.button.processing::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 16px;
-    height: 16px;
-    margin: -8px 0 0 -8px;
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: button-loading-spinner 0.6s linear infinite;
-}
-
-.button:hover {
-    background: var(--surface);
-    border-color: rgba(var(--primary), 0.3);
-    color: var(--primary);
-    transform: translateY(-1px);
+    white-space: nowrap;
     box-shadow: var(--shadow-sm);
 }
 
-/* 主操作按钮样式 */
+.button-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.15s ease;
+}
+
+.button-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.button-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    opacity: 0.75;
+    transition: all 0.2s ease;
+}
+
+.button-text {
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+/* 按钮悬停状态 */
+.button:hover {
+    background: rgba(var(--primary-rgb), 0.05);
+    border-color: rgba(var(--primary-rgb), 0.3);
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.button:hover .button-content {
+    transform: translateY(0);
+}
+
+.button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+/* 主要按钮样式 */
 .button.primary {
     background: var(--primary);
     color: white;
     border-color: transparent;
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.2);
 }
 
 .button.primary:hover {
     background: var(--primary-hover);
-    box-shadow: 0 2px 8px rgba(var(--primary), 0.2);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
-/* 危险操作按钮样式 */
+.button.primary .button-icon svg {
+    stroke: white;
+    opacity: 0.9;
+}
+
+/* 危险按钮样式 */
 .button.danger {
     color: var(--error);
     border-color: rgba(255, 77, 79, 0.15);
 }
 
 .button.danger:hover {
-    background: rgba(255, 77, 79, 0.05);
+    background: rgba(255, 77, 79, 0.08);
     border-color: rgba(255, 77, 79, 0.3);
-    color: var(--error);
+    box-shadow: 0 2px 8px rgba(255, 77, 79, 0.1);
 }
 
-/* 更新按钮组样式 */
+/* 按钮组样式 */
 .button-group {
     display: flex;
-    gap: 4px; /* 减小按钮间距 */
-}
-
-.divider {
-    width: 1px;
-    background: var(--divider);
-    margin: 0 8px; /* 减小间距 */
-    align-self: stretch;
+    gap: 8px;
 }
 
 .content {
     flex: 1;
-    padding: 0; /* 移除外部容器的内边距 */
+    padding: 0;
     box-sizing: border-box;
     max-width: 100%;
     margin: 0 auto;
@@ -182,11 +201,10 @@ body {
 }
 
 #viewer {
-    /* 移除固定的最小高度，改用flex布局自适应 */
     flex: 1;
-    height: 0; /* 这个属性很重要，让flex:1生效 */
-    min-height: 300px; /* 设置一个最小高度，避免内容太少时太窄 */
-    margin-bottom: 16px; /* 底部添加适当间距 */
+    height: 0;
+    min-height: 300px;
+    margin-bottom: 16px;
     border: none;
     resize: none;
     font-size: 15px;
@@ -201,7 +219,6 @@ body {
     transition: box-shadow 0.2s ease;
 }
 
-/* 焦点状态使用更柔和的阴影效果 */
 #viewer:focus {
     box-shadow: var(--shadow-lg), 0 0 0 1px rgba(var(--primary), 0.1);
 }
@@ -225,7 +242,6 @@ body {
     margin: 20px;
 }
 
-/* Toast notification */
 .toast {
     position: fixed;
     bottom: 32px;
@@ -251,22 +267,27 @@ body {
     opacity: 1;
 }
 
-/* Success status */
 .toast[data-status="success"] {
     color: #52c41a;
     background: rgba(82, 196, 26, 0.1);
 }
 
-/* Error status */
 .toast[data-status="error"] {
     color: var(--error);
     background: rgba(255, 77, 79, 0.1);
 }
 
-/* Mobile responsiveness */
 @media (max-width: 768px) {
     .header {
         padding: 10px 16px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    
+    .header::-webkit-scrollbar {
+        display: none;
     }
 
     .content {
@@ -277,12 +298,23 @@ body {
         margin-bottom: 12px;
         padding: 20px;
         font-size: 14px;
-        min-height: 200px; /* 移动端稍微降低最小高度 */
+        min-height: 200px;
     }
 
     .button {
-        padding: 6px 12px;
-        font-size: 12px;
+        padding: 6px 10px;
+        font-size: 13px;
+        min-height: 36px;
+        transition: all 0.3s ease;
+    }
+
+    .button-icon svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .button-group {
+        gap: 6px;
     }
 
     .toast {
@@ -293,20 +325,20 @@ body {
     }
 }
 
-/* iOS专用样式 */
 @supports (-webkit-touch-callout: none) {
     #viewer {
-        /* 防止iOS双击缩放 */
         touch-action: manipulation;
     }
 
     .button {
-        /* 防止iOS双击缩放 */
-        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .button:active {
+        opacity: 0.8;
     }
 }
 
-/* QR Modal with theme variables */
 .qr-modal {
     position: fixed;
     top: 0;
@@ -381,7 +413,6 @@ body {
     display: block;
 }
 
-/* Dark mode QR code inversion */
 html.dark-theme .qrcode-wrapper,
 html[data-theme="dark"] .qrcode-wrapper {
     background: #fff;
@@ -413,7 +444,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     }
 }
 
-/* 添加 URL 显示相关样式 */
 .url-container {
     margin-top: 16px;
     padding: 8px 12px;
@@ -423,27 +453,23 @@ html[data-theme="dark"] .qrcode-wrapper {
     color: #666;
     cursor: pointer;
     transition: all 0.2s ease;
-    /* 使用 flex 布局 */
     display: flex;
     align-items: center;
     gap: 8px;
     max-width: 280px;
 }
 
-/* URL 文本容器 */
 .url-text {
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-all;
-    /* 限制最大行数为2行 */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     line-height: 1.4;
 }
 
-/* 复制按钮文字 */
 .copy-hint {
     font-size: 12px;
     color: #1890ff;
@@ -451,8 +477,8 @@ html[data-theme="dark"] .qrcode-wrapper {
     white-space: nowrap;
     padding-left: 4px;
     flex-shrink: 0;
-    min-width: 48px; /* 添加固定最小宽度 */
-    text-align: right; /* 文字右对齐 */
+    min-width: 48px;
+    text-align: right;
 }
 
 .url-container:hover {
@@ -463,7 +489,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     color: #52c41a;
 }
 
-/* 针对 WebKit 内核浏览器 */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -476,7 +501,6 @@ html[data-theme="dark"] .qrcode-wrapper {
 ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 4px;
-    /* 为了使滚动条尺寸不影响布局，可添加内边距 */
     border: 2px solid transparent;
     background-clip: content-box;
 }
@@ -525,7 +549,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     50% { opacity: 1; }
 }
 
-/* 深色模式适配 */
 @media (prefers-color-scheme: dark) {
     .loading-container {
         background: #242424;
@@ -541,7 +564,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     }
 }
 
-/* 移动端适配 */
 @media (max-width: 768px) {
     .loading-container {
         padding: 32px;
@@ -559,7 +581,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     }
 }
 
-/* Password Dialog Styles - Clean and Elegant */
 .password-dialog {
     text-align: center;
     max-width: 380px;
@@ -656,7 +677,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     to { transform: rotate(360deg); }
 }
 
-/* Mobile optimization */
 @media (max-width: 480px) {
     .password-dialog {
         margin: 20px auto;
@@ -672,14 +692,12 @@ html[data-theme="dark"] .qrcode-wrapper {
     }
 }
 
-/* Default hidden states */
 #qrModal,
 #passwordDialog,
 #loadingContainer {
     display: none;
 }
 
-/* When active/visible */
 #qrModal.active {
     display: flex;
 }
@@ -689,7 +707,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     display: block;
 }
 
-/* 全设备媒体元素自适应显示 - 更全面的选择器 */
 .cherry-markdown img,
 .cherry-markdown video,
 .cherry-markdown iframe,
@@ -705,7 +722,6 @@ html[data-theme="dark"] .qrcode-wrapper {
 #qbin-viewer img,
 #qbin-viewer video,
 #qbin-viewer iframe,
-/* 额外覆盖特定场景 */
 .cherry-markdown .cherry-preview img,
 .cherry-markdown .cherry-preview video,
 .cherry-markdown .cherry-preview iframe {
@@ -718,7 +734,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     box-sizing: border-box !important;
 }
 
-/* 特别处理视频和iframe容器 */
 .cherry-video-container,
 .cherry-markdown .cherry-video-container,
 .cherry-markdown iframe[src*="youtube"],
@@ -739,7 +754,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     overflow: hidden !important;
 }
 
-/* 确保居中对齐的内容容器也受限 */
 .cherry-markdown [data-type="center"] img,
 .cherry-markdown [data-type="center"] video,
 .cherry-markdown [data-type="center"] iframe,
@@ -750,7 +764,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     max-width: 100% !important;
 }
 
-/* 修复在某些浏览器中可能出现的表格内媒体元素问题 */
 .cherry-markdown table img,
 .cherry-markdown table video,
 .cherry-previewer table img,
@@ -758,17 +771,15 @@ html[data-theme="dark"] .qrcode-wrapper {
     max-width: 100% !important;
 }
 
-/* 优化qbin-viewer区域 */
 #qbin-viewer {
     flex: 1;
-    padding: 0; /* 移除外层容器的内边距 */
+    padding: 0;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     overflow: auto;
 }
 
-/* 确保Cherry Markdown内容区域占满空间 */
 .cherry-markdown, 
 .cherry-editor, 
 .cherry-previewer {
@@ -778,17 +789,15 @@ html[data-theme="dark"] .qrcode-wrapper {
     margin: 0 !important;
 }
 
-/* 为内部渲染内容添加适当边距 */
 .cherry-markdown__editor--preview,
 .cherry-previewer,
 .cherry-markdown .cherry-preview,
 #qbin-viewer > .cherry-previewer {
-    padding: 24px !important; /* 内容区域保留舒适的边距 */
-    max-width: 960px !important; /* 限制内容最大宽度，提高可读性 */
-    margin: 0 auto !important; /* 在父容器中居中 */
+    padding: 24px !important;
+    max-width: 960px !important;
+    margin: 0 auto !important;
 }
 
-/* 移动端适配 - 较小的边距 */
 @media (max-width: 768px) {
     .cherry-markdown__editor--preview,
     .cherry-previewer,
@@ -798,7 +807,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     }
 }
 
-/* 媒体元素自适应 */
 .cherry-markdown img,
 .cherry-previewer img,
 .cherry-markdown__editor--preview img,
@@ -818,7 +826,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     margin: 0 auto !important;
 }
 
-/* 现代化音频播放器样式 */
 .modern-audio-player {
     display: flex;
     align-items: center;
@@ -872,7 +879,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     outline: none;
 }
 
-/* 自定义音频控件样式 - 适配浏览器默认控件 */
 .modern-audio-control::-webkit-media-controls-panel {
     background: var(--surface);
 }
@@ -883,7 +889,6 @@ html[data-theme="dark"] .qrcode-wrapper {
     filter: saturate(1.2);
 }
 
-/* 移动设备适配 */
 @media (max-width: 768px) {
     .modern-audio-player {
         padding: 12px 16px;
@@ -902,22 +907,21 @@ html[data-theme="dark"] .qrcode-wrapper {
     }
 }
 
-/* 优化现代化错误提示组件 */
 .modern-error-container {
     display: flex;
-    flex-direction: row; /* 桌面端使用水平布局 */
+    flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     background: var(--surface);
     border-radius: 12px;
     padding: 40px;
     margin: 40px auto;
-    width: 80%; /* 更宽的显示区域 */
-    max-width: 800px; /* 增加最大宽度 */
+    width: 80%;
+    max-width: 800px;
     box-shadow: var(--shadow-md);
     border: 1px solid rgba(255, 77, 79, 0.15);
     animation: errorFadeIn 0.3s ease-out;
-    text-align: left; /* 文本左对齐 */
+    text-align: left;
 }
 
 @keyframes errorFadeIn {
@@ -932,13 +936,13 @@ html[data-theme="dark"] .qrcode-wrapper {
 }
 
 .error-icon-wrapper {
-    margin-right: 32px; /* 水平间距 */
-    margin-bottom: 0; /* 移除底部间距 */
-    flex-shrink: 0; /* 防止图标被压缩 */
+    margin-right: 32px;
+    margin-bottom: 0;
+    flex-shrink: 0;
 }
 
 .error-icon {
-    width: 80px; /* 更大的图标 */
+    width: 80px;
     height: 80px;
     color: var(--error);
     animation: errorPulse 2s ease-in-out infinite;
@@ -965,27 +969,26 @@ html[data-theme="dark"] .qrcode-wrapper {
 
 .error-title {
     color: var(--error);
-    font-size: 24px; /* 更大的标题 */
+    font-size: 24px;
     font-weight: 500;
     margin: 0 0 16px 0;
 }
 
 .error-message {
     color: var(--text);
-    font-size: 16px; /* 更大的文本 */
+    font-size: 16px;
     line-height: 1.6;
     margin: 0;
     word-break: break-word;
 }
 
-/* 移动端适配 - 转为垂直布局 */
 @media (max-width: 768px) {
     .modern-error-container {
-        flex-direction: column; /* 移动端改回垂直布局 */
+        flex-direction: column;
         padding: 24px;
         margin: 16px auto;
         text-align: center;
-        width: calc(100% - 32px); /* 减去左右外边距 */
+        width: calc(100% - 32px);
     }
     
     .error-icon-wrapper {
@@ -1005,6 +1008,96 @@ html[data-theme="dark"] .qrcode-wrapper {
     
     .error-message {
         font-size: 14px;
+    }
+}
+
+/* Icons-only mode for small screens */
+@media (max-width: 600px) {
+    .button .button-text {
+        display: none; /* Hide text on small screens */
+    }
+    
+    .button {
+        padding: 8px;
+        border-radius: 8px;
+        aspect-ratio: 1/1; /* Make buttons square */
+        width: 36px;
+        height: 36px;
+    }
+    
+    .button-icon svg {
+        width: 18px;
+        height: 18px;
+        opacity: 0.9;
+    }
+    
+    /* Add tooltip for icon-only buttons */
+    .button::after {
+        content: attr(aria-label);
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--surface);
+        color: var(--text);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        box-shadow: var(--shadow-md);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+        pointer-events: none;
+        border: 1px solid var(--border);
+    }
+    
+    .button:hover::after {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .button:hover .button-icon svg {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    
+    /* Special styling for primary and danger buttons */
+    .button.primary, .button.danger {
+        box-shadow: none;
+    }
+    
+    .button.primary {
+        background: var(--primary);
+    }
+    
+    .button.danger {
+        background: rgba(255, 77, 79, 0.1);
+    }
+    
+    /* Adjust button group */
+    .button-group {
+        gap: 6px;
+    }
+    
+}
+
+/* Very small screens optimization */
+@media (max-width: 360px) {
+    .header {
+        padding: 8px 12px;
+        justify-content: center; /* Center buttons on very small screens */
+    }
+    
+    .button {
+        width: 32px;
+        height: 32px;
+        padding: 6px;
+    }
+    
+    .button-icon svg {
+        width: 16px;
+        height: 16px;
     }
 }
 

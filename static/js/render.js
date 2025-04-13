@@ -149,8 +149,10 @@ class QBinViewer {
             await this.loadContent(headResponse);
         } catch (error) {
             console.error('Error loading content:', error);
+            const debouncedHome = this.debounce(() => this.handleHome());
             const debouncedNew = this.debounce(() => this.handleNew());
             this.buttonBar.innerHTML = '';
+            this.buttonBar.appendChild(this.addButton('Home', debouncedHome));
             this.buttonBar.appendChild(this.addButton('New', debouncedNew));
             await this.renderError(error.message || '内容加载失败')
         }
@@ -307,10 +309,6 @@ class QBinViewer {
         primaryGroup.className = 'button-group';
         secondaryGroup.className = 'button-group';
 
-        // Copy 按钮固定在最前
-        const copyBtn = this.addButton('Copy', () => this.handleCopy());
-        primaryGroup.appendChild(copyBtn);
-
         // 使用防抖包装按钮处理函数
         const debouncedFork = this.debounce(() => this.handleFork());
         const debouncedRaw = this.debounce(() => this.handleRaw());
@@ -318,44 +316,64 @@ class QBinViewer {
         const debouncedDelete = this.debounce(() => this.handleDelete());
         const debouncedDownload = this.debounce(() => this.handleDownload());
 
+        const copyBtn = this.addButton('Copy', () => this.handleCopy());
+        primaryGroup.appendChild(copyBtn);
+
         if (contentType?.startsWith('text/')) {
             primaryGroup.appendChild(this.addButton('Fork', debouncedFork));
             const rawBtn = this.addButton('Raw', debouncedRaw);
-            rawBtn.classList.add('secondary');
-            secondaryGroup.appendChild(rawBtn);
+            primaryGroup.appendChild(rawBtn);
         } else if (['image/', 'audio/', 'video/'].some(type => contentType.startsWith(type))) {
             const rawBtn = this.addButton('Raw', debouncedRaw);
-            rawBtn.classList.add('secondary');
-            secondaryGroup.appendChild(rawBtn);
+            primaryGroup.appendChild(rawBtn);
         } else {
             const downBtn = this.addButton('Down', debouncedDownload);
-            downBtn.classList.add('secondary');
-            secondaryGroup.appendChild(downBtn);
+            primaryGroup.appendChild(downBtn);
         }
 
-        const qrBtn = this.addButton('QR', () => this.showQRCode());
-        qrBtn.classList.add('secondary');
-        primaryGroup.appendChild(qrBtn);
+        primaryGroup.appendChild(this.addButton('New', debouncedNew));
+        const HomeBtn = this.addButton('Home', () => this.handleHome());
+        secondaryGroup.appendChild(HomeBtn);
 
-        // 通用按钮
-        secondaryGroup.appendChild(this.addButton('New', debouncedNew));
+        const qrBtn = this.addButton('Share', () => this.showQRCode());
+        secondaryGroup.appendChild(qrBtn);
 
         // 删除按钮放在最后，使用危险样式
-        const delBtn = this.addButton('Del', debouncedDelete);
+        const delBtn = this.addButton('Delete', debouncedDelete);
         delBtn.classList.add('danger');
         secondaryGroup.appendChild(delBtn);
 
         this.buttonBar.appendChild(primaryGroup);
-        const divider = document.createElement('div');
-        divider.className = 'divider';
-        this.buttonBar.appendChild(divider);
         this.buttonBar.appendChild(secondaryGroup);
     }
 
     addButton(text, onClick) {
         const button = document.createElement('button');
         button.className = 'button';
-        button.textContent = text;
+        button.setAttribute('aria-label', text);
+        
+        // Create icon-text container
+        const buttonContent = document.createElement('span');
+        buttonContent.className = 'button-content';
+        
+        // Add icon based on button text
+        const iconSvg = this.getButtonIcon(text);
+        if (iconSvg) {
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'button-icon';
+            iconSpan.innerHTML = iconSvg;
+            buttonContent.appendChild(iconSpan);
+        }
+        
+        // Add text
+        const textSpan = document.createElement('span');
+        textSpan.className = 'button-text';
+        textSpan.textContent = text;
+        buttonContent.appendChild(textSpan);
+        
+        // Add content to button
+        button.appendChild(buttonContent);
+        
         button.onclick = async (e) => {
             const btn = e.currentTarget;
             if (btn.disabled) return;
@@ -367,6 +385,22 @@ class QBinViewer {
             }
         };
         return button;
+    }
+
+    getButtonIcon(buttonType) {
+        // Return appropriate SVG icon based on button type
+        const icons = {
+            'Home': '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-home"><path d="M2 10l10-7 10 7M4.5 10.5V20a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-9.5"/><path d="M10 21v-6h4v6"/></svg>',
+            'Copy': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>',
+            'Fork': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4"><path d="M37 12a4 4 0 1 0 0-8a4 4 0 0 0 0 8Zm-26 0a4 4 0 1 0 0-8a4 4 0 0 0 0 8Zm13 32a4 4 0 1 0 0-8a4 4 0 0 0 0 8Z"/><path stroke-linecap="round" d="M11 12v3c0 7 13 10 13 17v4v-4c0-7 13-10 13-17v-3"/></g></svg>',
+            'Raw': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 22v-9m0 9l-2.5-2m2.5 2l2.5-2M5.034 9.117A4.002 4.002 0 0 0 6 17h1"/><path d="M15.83 7.138a5.5 5.5 0 0 0-10.796 1.98S5.187 10 5.5 10.5"/><path d="M17 17a5 5 0 1 0-1.17-9.862L14.5 7.5"/></g></svg>',
+            'Share': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none"><path d="M22 10.981L15.027 2v4.99C3.075 6.99 1.711 16.678 2.043 22l.007-.041c.502-2.685.712-6.986 12.977-6.986v4.99L22 10.98z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>',
+            'New': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>',
+            'Delete': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16l-1.58 14.22A2 2 0 0 1 16.432 22H7.568a2 2 0 0 1-1.988-1.78zm3.345-2.853A2 2 0 0 1 9.154 2h5.692a2 2 0 0 1 1.81 1.147L18 6H6zM2 6h20m-12 5v5m4-5v5"/></svg>',
+            'Down': '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.877a2 2 0 0 0 1.94-1.515L22 17"/></svg>'
+        };
+        
+        return icons[buttonType] || null;
     }
 
     handleRaw() {
@@ -406,6 +440,10 @@ class QBinViewer {
         sessionStorage.removeItem(this.CACHE_KEY + 'last');
         const originalEditor = getCookie('qbin-editor') || 'm';
         window.location.assign(`/${originalEditor}`);
+    }
+
+    handleHome() {
+        window.location.assign(`/home`);
     }
 
     handleCopy() {

@@ -51,6 +51,7 @@ class QBinHome {
         this.hasMoreData = true;
         this.storageItems = [];
         this.selectedItem = null;
+        this.username = "🌈"
 
         // 滚动相关属性
         this.scrollRAF = null; // requestAnimationFrame标识符
@@ -1584,14 +1585,13 @@ class QBinHome {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const data = await response.json();
-            const username = data.data?.name;
+            this.username = data.data?.name || "🌈";
             const email = data.data?.email;
-            this.updateUserProfile({name: username, avatar: getStyleFromHash(username), email: email});
+            this.updateUserProfile({name: this.username, avatar: getStyleFromHash(this.username), email: email});
         } catch (error) {
             console.error('Failed to load user info:', error);
-            const defaultUsername = "用户名";
             this.updateUserProfile({
-                name: defaultUsername,
+                name: this.username,
                 avatar: getStyleFromHash("Error")
             });
         }

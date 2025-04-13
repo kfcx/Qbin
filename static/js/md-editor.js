@@ -350,12 +350,6 @@ class QBinMDEditor extends QBinEditorBase {
 
         if (isClick) {
             passwordPanel.classList.toggle('active');
-            if (passwordPanel.classList.contains('active')) {
-                const settingsBtn = document.querySelector('.cherry-toolbar-button.cherry-toolbar-settings');
-                if (settingsBtn) {
-                    this.adjustPanelPosition(settingsBtn);
-                }
-            }
         }
     }
 }
