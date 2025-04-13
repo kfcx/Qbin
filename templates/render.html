@@ -32,6 +32,11 @@
                         window?.cherry?.setTheme('light');
                     }
                 }
+                const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+                if (metaThemeColor) {
+                    const isDark = document.documentElement.classList.contains('dark-theme');
+                    metaThemeColor.setAttribute('content', isDark ? '#121212' : '#ffffff');
+                }
             }
             applyTheme();
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {

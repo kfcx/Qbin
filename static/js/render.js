@@ -59,7 +59,7 @@ class QBinViewer {
                     },
                 },
                 themeSettings: {
-                    mainTheme: 'default',
+                    mainTheme: 'light',
                     inlineCodeTheme: 'default',
                     codeBlockTheme: 'default',
                     toolbarTheme: 'default'
@@ -117,7 +117,7 @@ class QBinViewer {
                     },
                 },
                 themeSettings: {
-                    mainTheme: 'default',
+                    mainTheme: 'light',
                     codeBlockTheme: 'default',
                 },
             };
