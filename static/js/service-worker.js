@@ -4,7 +4,7 @@
  */
 
 // 缓存配置
-const CACHE_VERSION = 'v1.40';
+const CACHE_VERSION = 'v1.43';
 const STATIC_CACHE_NAME = `qbin-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `qbin-dynamic-${CACHE_VERSION}`;
 const CDN_CACHE_NAME = `qbin-cdn-${CACHE_VERSION}`;
@@ -43,6 +43,7 @@ const CDN_RESOURCES = [
     'https://cdn.jsdelivr.net/npm/echarts@4.6.0/dist/',
     'https://cdn.jsdelivr.net/npm/mermaid@8.11.1/dist/',
     'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js',
+    'https://notion-avatar.app/api/svg/',
 ];
 
 // 页面模板
@@ -84,9 +85,24 @@ self.addEventListener('install', event => {
 async function fullCachingStrategy() {
     try {
         const staticCache = await caches.open(STATIC_CACHE_NAME);
+        const fetchAndCacheResources = async (resources) => {
+            return Promise.all(resources.map(async (resource) => {
+                try {
+                    const response = await fetch(resource);
+                    if (response.status === 200) {
+                        return staticCache.put(resource, response);
+                    } else {
+                        return Promise.resolve();
+                    }
+                } catch (err) {
+                    warn(`资源缓存失败: ${resource}`, err);
+                    return Promise.resolve();
+                }
+            }));
+        };
         await Promise.all([
-            staticCache.addAll(STATIC_RESOURCES).catch(err => warn('静态资源缓存失败:', err)),
-            staticCache.addAll(PAGE_TEMPLATES).catch(err => warn('页面模板缓存失败:', err)),
+            fetchAndCacheResources(STATIC_RESOURCES),
+            fetchAndCacheResources(PAGE_TEMPLATES),
             caches.open(DYNAMIC_CACHE_NAME),
             caches.open(CDN_CACHE_NAME),
             preCacheCriticalCdnResources()

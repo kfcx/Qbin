@@ -130,8 +130,27 @@ const oauthProviders = {
  */
 export async function authMiddleware(ctx: Context, next: () => Promise<unknown>) {
   const session = ctx.state.session;
-  const token = await ctx.cookies.get("token");  // 从 cookie 中取出 Token
+  let token = await ctx.cookies.get("token");  // 从 cookie 中取出 Token
   const currentPath = ctx.request.url.pathname;
+
+  if (ISDEMO !== false && !token) {
+    if (!session.has("user") && !["/login", "/api/login/admin", "/favicon.ico", "/r/"].some(prefix => currentPath.startsWith(prefix))) {
+      const demoToken = await generateJwtToken({
+        id: 1,
+        email: "demo@qbin.me",
+        name: "Demo User",
+        provider: "demo",
+      }, 43200);
+      await ctx.cookies.set("token", demoToken, {
+        maxAge: 43200000,
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+      });
+      token = demoToken;
+      if(currentPath === "/") return ctx.response.redirect("/home");
+    }
+  }
 
   if (token) {
     try {
@@ -164,25 +183,6 @@ export async function authMiddleware(ctx: Context, next: () => Promise<unknown>)
     return;
   }
 
-  if (ISDEMO !== false) {
-    console.log(currentPath)
-    if (!session.has("user") && !["/login", "/api/login/admin", "/favicon.ico", "/r/"].some(prefix => currentPath.startsWith(prefix))) {
-      const demoToken = await generateJwtToken({
-        id: 1,
-        email: "demo@qbin.me",
-        name: "Demo User",
-        provider: "demo",
-      }, 43200);
-      await ctx.cookies.set("token", demoToken, {
-        maxAge: 43200000,
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-      });
-      return ctx.response.redirect("/home");
-    }
-  }
-
   const method = ctx.request.method;
   const isExactPathAuth = method === "GET" && exactPaths.includes(currentPath);
   const isPrefixPathAuth = prefixPaths.some(prefix => currentPath.startsWith(prefix));
@@ -199,7 +199,6 @@ export const handleAdminLogin = async (ctx: Context) => {
   try {
     const body = await ctx.request.body.json();
     const { email, password } = body;
-    console.log(email, password)
     if (!email || !password) return new Response(ctx, 400, "Email and password are required");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) return new Response(ctx, 400, "Invalid email format");

@@ -1606,11 +1606,8 @@ class QBinHome {
         if (avatarElement && userData.avatar) {
             avatarElement.src = userData.avatar;
             avatarElement.onerror = function() {
-                // 如果头像加载失败，使用基于用户名的头像
                 this.src = getStyleFromHash(userData.name || "Demo User");
-                // 如果生成的头像也加载失败，使用默认头像
                 this.onerror = function() {
-                    this.src = "/static/img/default-avatar.png";
                     this.onerror = null; // 防止无限循环
                 };
             };

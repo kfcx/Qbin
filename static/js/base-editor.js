@@ -24,7 +24,6 @@ class QBinEditorBase {
         }
     }
 
-    // 基础初始化方法
     async initialize() {
         this.setupWindowsCloseSave();
         this.initializePasswordPanel();
@@ -285,7 +284,7 @@ class QBinEditorBase {
             } else if (error.message.includes("network") || error.message.includes("connect")) {
                 errorMsg = "网络连接失败，请检查网络";
             } else {
-                errorMsg = `保存失败: ${error.message}`;
+                errorMsg = error.message;
             }
 
             this.updateUploadStatus(errorMsg, "error");
@@ -299,7 +298,7 @@ class QBinEditorBase {
             // Reset upload button if needed
             if (isFile && document.querySelector('.upload-icon').innerHTML === "⏳") {
                 document.querySelector('.upload-icon').innerHTML = "📁";
-                document.querySelector('.upload-text').textContent = "点击或拖放文件到此处上传";
+                document.querySelector('.upload-text').textContent = "支持Ctrl+V、拖放上传";
             }
 
             setTimeout(() => {

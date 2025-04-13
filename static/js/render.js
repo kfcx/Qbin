@@ -15,7 +15,7 @@ class QBinViewer {
         if (this.cherry) {
             this.cherry = null;
         }
-        if(contentType.startsWith("text/") && !contentType.includes("markdown")){
+        if (contentType.startsWith("text/") && !contentType.includes("markdown")) {
             const cherryConfig = {
                 id: 'qbin-viewer',
                 value: content,
@@ -68,7 +68,7 @@ class QBinViewer {
             };
             this.cherry = new Cherry(cherryConfig);
             this.contentType = contentType;
-        }else {
+        } else {
             const cherryConfig = {
                 id: 'qbin-viewer',
                 value: content,
@@ -262,7 +262,7 @@ class QBinViewer {
     </div>
 </div>
 `;
-        
+
         this.cherryContainer.innerHTML = errorComponent;
         this.hideLoading();
     }
@@ -455,54 +455,30 @@ class QBinViewer {
                 });
             }
             if (navigator.clipboard && navigator.clipboard.write) {
-                // 创建canvas并绘制图片
-                const canvas = document.createElement('canvas');
-                canvas.width = firstImage.naturalWidth;
-                canvas.height = firstImage.naturalHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(firstImage, 0, 0);
-                // 将图片转换为Blob对象
-                const blob = await new Promise(resolve => {
-                    canvas.toBlob(resolve, 'image/png');
-                });
-                // 复制到剪贴板
-                await navigator.clipboard.write([
-                    new ClipboardItem({
-                        [blob.type]: blob
-                    })
-                ]);
-                this.showToast('图片已复制到剪贴板', {type: 'info'});
-                return;
-            }
-            if (navigator.share && navigator.canShare) {
-                // 创建可分享的文件对象
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = imageViewer.naturalWidth;
-                canvas.height = imageViewer.naturalHeight;
-                ctx.drawImage(imageViewer, 0, 0);
-
-                const blob = await new Promise(resolve => {
-                    canvas.toBlob(resolve, 'image/png');
-                });
-
-                const file = new File([blob], 'image.png', {type: 'image/png'});
-                const shareData = {
-                    files: [file]
-                };
-
-                if (navigator.canShare(shareData)) {
-                    await navigator.share(shareData);
-                    this.showToast('已打开分享面板', {type: 'info'});
+                try {
+                    // 创建可分享的文件对象
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = firstImage.naturalWidth;
+                    canvas.height = firstImage.naturalHeight;
+                    ctx.drawImage(firstImage, 0, 0);
+                    const blob = await new Promise(resolve => {
+                        canvas.toBlob(resolve, 'image/png');
+                    });
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            [blob.type]: blob
+                        })
+                    ]);
+                    this.showToast('图片已复制到剪贴板', {type: 'info'});
                     return;
+                } catch (err) {
+                    console.warn('复制图片失败:', err);
                 }
             }
-            content = imageViewer.src;
-            tips = '已复制图片链接';
+            content = window.location.href.replace("/p/", "/r/");
+            tips = '已复制图片直链';
         } else if (this.contentType.startsWith("text/")) {
-            if (!this.contentType.includes("markdown")) {
-                content = content.replace(/^.*?\n/, '');
-            }
             tips = '内容已复制到剪贴板';
         } else {
             content = window.location.href.replace('/p/', '/r/');
@@ -514,7 +490,7 @@ class QBinViewer {
                     this.showToast(tips, {type: 'info'});
                 } else {
                     this.showToast('复制失败，请手动复制', {type: 'error'});
-                    const modal = ClipboardUtil.createManualCopyUI(url);
+                    const modal = ClipboardUtil.createManualCopyUI(content);
                     document.body.appendChild(modal);
                     modal.addEventListener('manualCopy', () => {
                         this.showToast("已手动复制");
@@ -609,38 +585,26 @@ class QBinViewer {
             const urlContainer = modal.querySelector('.url-container');
             const copyHint = urlContainer.querySelector('.copy-hint');
             urlContainer.onclick = async () => {
-                try {
-                    await navigator.clipboard.writeText(currentUrl);
-                    urlContainer.classList.add('copied');
-                    copyHint.textContent = '已复制';
-                    this.showToast('链接已复制', {type: 'info'});
-                    setTimeout(() => {
-                        urlContainer.classList.remove('copied');
-                        copyHint.textContent = '点击复制';
-                    }, 2000);
-                } catch (err) {
-                    const textarea = document.createElement('textarea');
-                    textarea.value = currentUrl;
-                    textarea.style.position = 'fixed';
-                    textarea.style.opacity = '0';
-                    document.body.appendChild(textarea);
-                    textarea.select();
-
-                    try {
-                        document.execCommand('copy');
-                        urlContainer.classList.add('copied');
-                        copyHint.textContent = '已复制';
-                        this.showToast('链接已复制', {type: 'info'});
-                        setTimeout(() => {
-                            urlContainer.classList.remove('copied');
-                            copyHint.textContent = '点击复制';
-                        }, 2000);
-                    } catch (err) {
-                        console.error('复制失败:', err);
-                        this.showToast('复制失败', {type: 'error'});
-                    }
-                    document.body.removeChild(textarea);
-                }
+                ClipboardUtil.copyToClipboard(currentUrl)
+                    .then(result => {
+                        if (result.success) {
+                            this.showToast("链接已复制", {type: 'info'});
+                            urlContainer.classList.add('copied');
+                            copyHint.textContent = '已复制';
+                            this.showToast('链接已复制', {type: 'info'});
+                            setTimeout(() => {
+                                urlContainer.classList.remove('copied');
+                                copyHint.textContent = '点击复制';
+                            }, 2000);
+                        } else {
+                            this.showToast('复制失败，请手动复制', {type: 'error'});
+                            const modal = ClipboardUtil.createManualCopyUI(currentUrl);
+                            document.body.appendChild(modal);
+                            modal.addEventListener('manualCopy', () => {
+                                this.showToast("已手动复制");
+                            });
+                        }
+                    });
             };
 
             if (typeof qrcode === 'undefined') {

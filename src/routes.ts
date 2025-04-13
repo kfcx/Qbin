@@ -27,6 +27,7 @@ import {
   getManifest, getIMG, getLoginPageHtml
 } from "./utils/render.ts";
 import { handleAdminLogin, handleLogin, handleOAuthCallback } from "./middlewares/auth.ts";
+import { ResponseMessages } from "./utils/messages.ts";
 
 
 function parsePathParams(params: Record<string, string>) {
@@ -56,17 +57,17 @@ async function handleContentUpload(ctx: Context<AppState>, key: string, pwd: str
   // 1) 基础验证
   const contentLength = parseInt(headers.get("Content-Length") || "0", 10);
   if (contentLength > MAX_UPLOAD_FILE_SIZE) {
-    throw new PasteError(413, "Content too large");
+    throw new PasteError(413, ResponseMessages.CONTENT_TOO_LARGE);
   }
   const contentType = headers.get("Content-Type") || "application/octet-stream";
   if (!mimeTypeRegex.test(contentType) || contentType.length > 100) {
-    throw new PasteError(415, "Invalid Content-Type format");
+    throw new PasteError(415, ResponseMessages.INVALID_CONTENT_TYPE);
   }
 
   // 2) 读取 body
   const content = await request.body.arrayBuffer();
   if (content.byteLength > MAX_UPLOAD_FILE_SIZE || contentLength !== content.byteLength) {
-    throw new PasteError(413, "Content too large");
+    throw new PasteError(413, ResponseMessages.CONTENT_TOO_LARGE);
   }
 
   const hash = cyrb53(content);
@@ -105,7 +106,7 @@ async function handleContentUpload(ctx: Context<AppState>, key: string, pwd: str
     .commit();
 
   if (!kvRes.ok) {
-    return new Response(ctx, 409, "Key already exists");
+    return new Response(ctx, 409, ResponseMessages.KEY_EXISTS);
   }
 
   // 6) 先更新内存 / Cache API
@@ -140,7 +141,7 @@ async function handleContentUpload(ctx: Context<AppState>, key: string, pwd: str
       cacheBroadcast.postMessage({ type: "delete", key });  // 通知其他节点删除
     }
   });
-  return new Response(ctx, 200, "success", { key, pwd, url: `${request.url.origin}/r/${key}/${pwd}` })
+  return new Response(ctx, 200, ResponseMessages.SUCCESS, { key, pwd, url: `${request.url.origin}/r/${key}/${pwd}` })
 }
 
 async function handleContentUpdate(ctx: Context<AppState>, key: string, pwd: string, pdb: MetadataDB) {
@@ -152,16 +153,16 @@ async function handleContentUpdate(ctx: Context<AppState>, key: string, pwd: str
 
   const contentLength = parseInt(headers.get("Content-Length") || "0", 10);
   if (contentLength > MAX_UPLOAD_FILE_SIZE) {
-    throw new PasteError(413, "Content too large");
+    throw new PasteError(413, ResponseMessages.CONTENT_TOO_LARGE);
   }
   const contentType = headers.get("Content-Type") || "application/octet-stream";
   if (!mimeTypeRegex.test(contentType) || contentType.length > 100) {
-    throw new PasteError(415, "Invalid Content-Type format");
+    throw new PasteError(415, ResponseMessages.INVALID_CONTENT_TYPE);
   }
 
   const content = await request.body.arrayBuffer();
   if (content.byteLength > MAX_UPLOAD_FILE_SIZE || contentLength !== content.byteLength) {
-    throw new PasteError(413, "Content too large");
+    throw new PasteError(413, ResponseMessages.CONTENT_TOO_LARGE);
   }
 
   const hash = cyrb53(content);
@@ -255,7 +256,7 @@ async function handleContentUpdate(ctx: Context<AppState>, key: string, pwd: str
     }
   });
 
-  return new Response(ctx, 200, "success", { key, pwd, url: `${request.url.origin}/r/${key}/${pwd}` })
+  return new Response(ctx, 200, ResponseMessages.SUCCESS, { key, pwd, url: `${request.url.origin}/r/${key}/${pwd}` })
 }
 
 /**
@@ -325,24 +326,16 @@ async function syncPostgresToKV(ctx: Context<AppState>, pdb: MetadataDB) {
       }
     }
 
-    ctx.response.status = 200;
-    ctx.response.body = {
-      success: true,
+    return new Response(ctx, 200, ResponseMessages.SUCCESS, {
       stats: {
         added, // 新增的fkey数量
         removed, // 移除的fkey数量
         unchanged, // 保持不变的fkey数量
         total: pgFkeys.length // 总fkey数量
-      }
-    };
-
+      }});
   } catch (error) {
     console.error("同步Postgres到KV时出错:", error);
-    ctx.response.status = 500;
-    ctx.response.body = {
-      success: false,
-      error: error.message
-    };
+    return new Response(ctx, 500, ResponseMessages.SERVER_ERROR)
   }
 }
 
@@ -354,84 +347,16 @@ const router = new Router<AppState>();
  * /m/key/pwd markdown编辑器
  */
 router
+  // FRONTEND
   .get("/favicon.ico", async (ctx) => {
     return await getFavicon(ctx, 200);
-  })
-  .get("/document", async (ctx) => {
-    return await getDocumentHtml(ctx, 200);
-  })
-  .get("/health", async (ctx) => {
-    return new Response(ctx, 200, "healthy");
   })
   .get("/login", async (ctx) => {
     return await getLoginPageHtml(ctx, 200);
   })
-  .get("/service-worker.js", async (ctx) => {
-    return await getServiceWorker(ctx, 200);
-  })
-  .get("/manifest.json", async (ctx) => {
-    return await getManifest(ctx, 200);
-  })
-  .get("/static/js/:file", async (ctx) => {
-    return await getJS(ctx, ctx.params.file, 200);
-  })
-  .get("/static/css/:file", async (ctx) => {
-    return await getCSS(ctx, ctx.params.file, 200);
-  })
-  .get("/static/css/fonts/:file", async (ctx) => {
-    return await getFONTS(ctx, ctx.params.file, 200);
-  })
-  .get("/static/img/:file", async (ctx) => {
-      return await getIMG(ctx, ctx.params.file, 200);
-    })
   .get("/home", async (ctx) => {
     return await getHomeHtml(ctx, 200);
   })    // 用户主页
-  .get("/r/:key?/:pwd?", async (ctx) => {
-    if (ctx.params.key === undefined) return new Response(ctx, 404, "访问路径不能为空");
-    const { key, pwd } = parsePathParams(ctx.params);
-    if (key === null) {
-      return new Response(ctx, 403, "该访问路径不可用");
-    }
-    const pdb = MetadataDB.getInstance();
-    const _metadata = await isCached(key, pwd, pdb);
-    if (_metadata?.email === undefined || (_metadata.expire || 0) < getTimestamp()) {
-      return new Response(ctx, 404, "访问内容不存在");
-    }
-    if (_metadata.pwd && !checkPassword(_metadata.pwd, pwd)) {
-      return new Response(ctx, 403, "访问密码错误");
-    }
-    const metadata = await getCachedContent(key, pwd, pdb);
-    if(!(metadata && "content" in metadata)){
-      return new Response(ctx, 404, "访问内容不存在");
-    }
-    ctx.state.metadata = { etag: metadata?.hash, time: metadata?.time ?? null };
-    ctx.response.headers.set('Pragma', 'no-cache');
-    ctx.response.headers.set('Cache-Control', 'no-cache, must-revalidate');  // private , must-revalidate | , max-age=3600
-    ctx.response.headers.set("Content-Type", metadata.type);
-    ctx.response.headers.set("Content-Length", metadata.len.toString());
-    ctx.response.body = metadata.content;
-  })    // get raw
-  .head("/r/:key?/:pwd?", async (ctx) => {
-    if (ctx.params.key === undefined) return new Response(ctx, 404, "访问路径不能为空");
-    const { key, pwd } = parsePathParams(ctx.params);
-    if (key === null) {
-      return new Response(ctx, 403, "该访问路径不可用");
-    }
-    const pdb = MetadataDB.getInstance();
-    const _metadata = await isCached(key, pwd, pdb);
-    if (_metadata?.email === undefined || (_metadata.expire || 0) < getTimestamp()) {
-      ctx.response.status = 404;
-      return;
-    }
-    if (_metadata.pwd && !checkPassword(_metadata.pwd, pwd)) { ctx.response.status = 403; return; }
-    ctx.response.status = 200;
-    ctx.response.headers.set("Content-Type", _metadata.type);
-    ctx.response.headers.set("Content-Length", _metadata.len.toString());
-  })    // head raw
-  .get("/p/:key?/:pwd?", async (ctx) => {
-    return await renderHtml(ctx, 200);
-  })    // render
   .get("/e/:key?/:pwd?", async (ctx) => {
     return await getEditHtml(ctx, 200);
   })    // edit
@@ -454,13 +379,84 @@ router
         return await getMDEditHtml(ctx, 200);
     }
   })
+  .get("/service-worker.js", async (ctx) => {
+    return await getServiceWorker(ctx, 200);
+  })
+  .get("/manifest.json", async (ctx) => {
+    return await getManifest(ctx, 200);
+  })
+  .get("/static/js/:file", async (ctx) => {
+    return await getJS(ctx, ctx.params.file, 200);
+  })
+  .get("/static/css/:file", async (ctx) => {
+    return await getCSS(ctx, ctx.params.file, 200);
+  })
+  .get("/static/css/fonts/:file", async (ctx) => {
+    return await getFONTS(ctx, ctx.params.file, 200);
+  })
+  .get("/static/img/:file", async (ctx) => {
+      return await getIMG(ctx, ctx.params.file, 200);
+    })
+
+  // BACKEND
+  .get("/document", async (ctx) => {
+    return await getDocumentHtml(ctx, 200);
+  })
+  .get("/health", async (ctx) => {
+    return new Response(ctx, 200, "healthy");
+  })
+  .get("/r/:key?/:pwd?", async (ctx) => {
+    if (ctx.params.key === undefined) return new Response(ctx, 404, ResponseMessages.PATH_EMPTY);
+    const { key, pwd } = parsePathParams(ctx.params);
+    if (key === null) {
+      return new Response(ctx, 403, ResponseMessages.PATH_UNAVAILABLE);
+    }
+    const pdb = MetadataDB.getInstance();
+    const _metadata = await isCached(key, pwd, pdb);
+    if (_metadata?.email === undefined || (_metadata.expire || 0) < getTimestamp()) {
+      return new Response(ctx, 404, ResponseMessages.CONTENT_NOT_FOUND);
+    }
+    if (_metadata.pwd && !checkPassword(_metadata.pwd, pwd)) {
+      return new Response(ctx, 403, ResponseMessages.PASSWORD_INCORRECT);
+    }
+    const metadata = await getCachedContent(key, pwd, pdb);
+    if(!(metadata && "content" in metadata)){
+      return new Response(ctx, 404, ResponseMessages.CONTENT_NOT_FOUND);
+    }
+    ctx.state.metadata = { etag: metadata?.hash, time: metadata?.time ?? null };
+    ctx.response.headers.set('Pragma', 'no-cache');
+    ctx.response.headers.set('Cache-Control', 'no-cache, must-revalidate');  // private , must-revalidate | , max-age=3600
+    ctx.response.headers.set("Content-Type", metadata.type);
+    ctx.response.headers.set("Content-Length", metadata.len.toString());
+    ctx.response.body = metadata.content;
+  })    // get raw
+  .head("/r/:key?/:pwd?", async (ctx) => {
+    if (ctx.params.key === undefined) return new Response(ctx, 404, ResponseMessages.PATH_EMPTY);
+    const { key, pwd } = parsePathParams(ctx.params);
+    if (key === null) {
+      return new Response(ctx, 403, ResponseMessages.PATH_UNAVAILABLE);
+    }
+    const pdb = MetadataDB.getInstance();
+    const _metadata = await isCached(key, pwd, pdb);
+    if (_metadata?.email === undefined || (_metadata.expire || 0) < getTimestamp()) {
+      ctx.response.status = 404;
+      return;
+    }
+    if (_metadata.pwd && !checkPassword(_metadata.pwd, pwd)) { ctx.response.status = 403; return; }
+    ctx.response.status = 200;
+    ctx.response.headers.set("Content-Type", _metadata.type);
+    ctx.response.headers.set("Content-Length", _metadata.len.toString());
+  })    // head raw
+  .get("/p/:key?/:pwd?", async (ctx) => {
+    return await renderHtml(ctx, 200);
+  })    // render
   .post("/s/:key/:pwd?", async (ctx) => {
     const { key, pwd } = parsePathParams(ctx.params);
     if (key === null) {
-      return new Response(ctx, 403, "该访问路径不可用");
+      return new Response(ctx, 403, ResponseMessages.PATH_UNAVAILABLE);
     }
     if(reservedPaths.has(key.toLowerCase())){
-      return new Response(ctx, 403, "不能修改保留路径");
+      return new Response(ctx, 403, ResponseMessages.PATH_RESERVED);
     }
     const pdb = MetadataDB.getInstance();
     const metadata = await isCached(key, pwd, pdb);
@@ -469,7 +465,7 @@ router
       if (metadata.expire > getTimestamp()){
         const email = await ctx.state.session?.get("user")?.email;
         if (!(email !== undefined && metadata.email === email)) {
-          return new Response(ctx, 403, "您没有该KEY的内容修改权限");
+          return new Response(ctx, 403, ResponseMessages.PERMISSION_DENIED);
         }
       }
       await handleContentUpdate(ctx, key, pwd || "", pdb);  // 更新
@@ -480,16 +476,16 @@ router
   .put("/s/:key/:pwd?", async (ctx) => {
     const { key, pwd } = parsePathParams(ctx.params);
     if (key === null) {
-      return new Response(ctx, 403, "该访问路径不可用");
+      return new Response(ctx, 403, ResponseMessages.PATH_UNAVAILABLE);
     }
     if(reservedPaths.has(key.toLowerCase())){
-      return new Response(ctx, 403, "不能修改保留路径");
+      return new Response(ctx, 403, ResponseMessages.PATH_RESERVED);
     }
     const pdb = MetadataDB.getInstance();
     const metadata = await isCached(key, pwd, pdb);
     if(metadata && "email" in metadata) {
       if ((metadata.expire || 0) > getTimestamp()){
-        return new Response(ctx, 409, "Key already exists");
+        return new Response(ctx, 409, ResponseMessages.KEY_EXISTS);
       }
       await handleContentUpdate(ctx, key, pwd || "", pdb);  // 更新
     }else {
@@ -497,27 +493,27 @@ router
     }
   })
   .delete("/d/:key/:pwd?", async (ctx) => {
-    if (ctx.params.key === undefined) return new Response(ctx, 404, "访问路径不能为空");
+    if (ctx.params.key === undefined) return new Response(ctx, 404, ResponseMessages.PATH_EMPTY);
     const { key, pwd } = parsePathParams(ctx.params);
     if (key === null) {
-      return new Response(ctx, 403, "该访问路径不可用");
+      return new Response(ctx, 403, ResponseMessages.PATH_UNAVAILABLE);
     }
     if(reservedPaths.has(key.toLowerCase())){
-      return new Response(ctx, 403, "不能删除保留路径");
+      return new Response(ctx, 403, ResponseMessages.PATH_RESERVED);
     }
 
     const pdb = MetadataDB.getInstance();
     const metadata = await isCached(key, pwd, pdb);
     if (!metadata || (metadata.expire || 0) < getTimestamp()) {
-      return new Response(ctx, 404, "内容不存在");
+      return new Response(ctx, 404, ResponseMessages.CONTENT_NOT_FOUND);
     }
     if(!(checkPassword(metadata.pwd, pwd) && "email" in metadata)){
-      return new Response(ctx, 403, "密码错误");
+      return new Response(ctx, 403, ResponseMessages.PASSWORD_INCORRECT);
     }
     // 验证是否本人或管理员
     const email = await ctx.state.session?.get("user")?.email;
     if (!(email !== undefined && metadata.email === email)) {
-      return new Response(ctx, 403, "您没有删除该内容的权限");
+      return new Response(ctx, 403, ResponseMessages.PERMISSION_DENIED);
     }
 
     delete metadata.content;  // 删除不必要信息
@@ -537,7 +533,7 @@ router
     });
 
     ctx.response.headers.set("Content-Type", "application/json");
-    return new Response(ctx, 200, "success")
+    return new Response(ctx, 200, ResponseMessages.SUCCESS)
   })
   .post("/api/login/admin", handleAdminLogin)
   .get("/api/login/:provider", handleLogin)
@@ -548,7 +544,7 @@ router
       httpOnly: true,
       sameSite: "strict"
     });
-    return new Response(ctx, 200, "Logged out successfully");
+    return new Response(ctx, 200, ResponseMessages.LOGGED_OUT);
   })
   .post("/api/user/token", async (ctx) => {
     // 获取基本请求信息
@@ -556,33 +552,33 @@ router
     const origin = ctx.request.headers.get("origin");
 
     if (!referer || referer.includes("/r/") || referer.includes("/m/")) {
-      return new Response(ctx, 403, "不允许从同源链接页面请求token");
+      return new Response(ctx, 403, ResponseMessages.REFERER_DISALLOWED);
     }
     if (referer === origin) {
-      return new Response(ctx, 403, "检测到可疑的Referer策略");
+      return new Response(ctx, 403, ResponseMessages.REFERER_INVALID);
     }
     const refererUrl = new URL(referer);
     if (refererUrl.pathname === "/" || refererUrl.pathname === "") {
-      return new Response(ctx, 403, "不允许使用仅包含域名的Referer");
+      return new Response(ctx, 403, ResponseMessages.REFERER_DISALLOWED);
     }
 
     const token = await ctx.cookies.get("token");
-    return new Response(ctx, 200, "success", { token: token });
+    return new Response(ctx, 200, ResponseMessages.SUCCESS, { token: token });
   })
   .get("/api/user/info", async (ctx) => {
     const data = await ctx.state.session?.get("user");
-    return new Response(ctx, 200, "success", data);
+    return new Response(ctx, 200, ResponseMessages.SUCCESS, data);
   })
   .get("/api/user/storage", async (ctx) => {
     const user = ctx.state.session?.get("user");
-    if (!user || !user.email) return new Response(ctx, 401, "请先登录");
+    if (!user || !user.email) return new Response(ctx, 401, ResponseMessages.LOGIN_REQUIRED);
 
     const url = new URL(ctx.request.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
 
-    if (isNaN(page) || page < 1) return new Response(ctx, 400, "无效的页码");
-    if (isNaN(pageSize) || pageSize < 1 || pageSize > 100) return new Response(ctx, 400, "无效的每页数量");
+    if (isNaN(page) || page < 1) return new Response(ctx, 400, ResponseMessages.INVALID_PAGE);
+    if (isNaN(pageSize) || pageSize < 1 || pageSize > 100) return new Response(ctx, 400, ResponseMessages.INVALID_PAGE_SIZE);
 
     const offset = (page - 1) * pageSize;
     try {
@@ -599,7 +595,7 @@ router
       }));
 
       const totalPages = Math.ceil(total / pageSize);
-      return new Response(ctx, 200, "success", {
+      return new Response(ctx, 200, ResponseMessages.SUCCESS, {
         items: safeItems,
         pagination: {
           total,
@@ -610,24 +606,24 @@ router
       });
     } catch (error) {
       console.error("获取用户存储数据时出错:", error);
-      return new Response(ctx, 500, "获取数据失败");
+      return new Response(ctx, 500, ResponseMessages.SERVER_ERROR);
     }
   })
   .get("/api/admin/storage", async (ctx) => {
     const user = ctx.state.session?.get("user");
     if(ISDEMO){
-      return new Response(ctx, 403, "演示站点功能不可用");
+      return new Response(ctx, 403, ResponseMessages.DEMO_RESTRICTED);
     }
     if (user.email !== EMAIL) {
-      return new Response(ctx, 403, "您没有管理员权限");
+      return new Response(ctx, 403, ResponseMessages.ADMIN_REQUIRED);
     }
 
     const url = new URL(ctx.request.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
 
-    if (isNaN(page) || page < 1) return new Response(ctx, 400, "无效的页码");
-    if (isNaN(pageSize) || pageSize < 1 || pageSize > 100) return new Response(ctx, 400, "无效的每页数量");
+    if (isNaN(page) || page < 1) return new Response(ctx, 400, ResponseMessages.INVALID_PAGE);
+    if (isNaN(pageSize) || pageSize < 1 || pageSize > 100) return new Response(ctx, 400, ResponseMessages.INVALID_PAGE_SIZE);
 
     const offset = (page - 1) * pageSize;
     try {
@@ -635,7 +631,7 @@ router
       const { items, total } = await pdb.listAll(pageSize, offset);
 
       const totalPages = Math.ceil(total / pageSize);
-      return new Response(ctx, 200, "success", {
+      return new Response(ctx, 200, ResponseMessages.SUCCESS, {
         items,
         pagination: {
           total,
@@ -646,22 +642,22 @@ router
       });
     } catch (error) {
       console.error("获取管理员存储数据时出错:", error);
-      return new Response(ctx, 500, "获取数据失败");
+      return new Response(ctx, 500, ResponseMessages.SERVER_ERROR);
     }
   })
   .get("/api/admin/sync", async (ctx) => {
     const email = await ctx.state.session?.get("user")?.email;
     if(ISDEMO){
-      return new Response(ctx, 403, "演示站点功能不可用");
+      return new Response(ctx, 403, ResponseMessages.DEMO_RESTRICTED);
     }
     if (!(email !== undefined && EMAIL === email)) {
-      return new Response(ctx, 403, "您没有管理员权限");
+      return new Response(ctx, 403, ResponseMessages.ADMIN_REQUIRED);
     }
     const pdb = MetadataDB.getInstance();
     return await syncPostgresToKV(ctx, pdb);
   })    // kv与pg同步
   // .post("/api/user/shares", async (ctx) => {
-  //   return new Response(ctx, 200, "success", [{ }]);
+  //   return new Response(ctx, 200, ResponseMessages.SUCCESS, [{ }]);
   // })
   // .post("/api/data/clean", async (ctx) => {
   // });   // 清理过期key
