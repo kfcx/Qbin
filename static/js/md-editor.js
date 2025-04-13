@@ -93,6 +93,7 @@ class QBinMDEditor extends QBinEditorBase {
                         theme: 'twilight',
                         lineNumber: true,
                         expandCode: true,
+                        changeLang: false,
                         editCode: false,
                         wrap: false,
                     },
@@ -175,7 +176,7 @@ class QBinMDEditor extends QBinEditorBase {
         });
         window.cherry = new Cherry(config);
         this.setupEditorChangeListener();
-        this.initializePasswordPanel(); // 添加这行
+        this.initializePasswordPanel();
         return window.cherry;
     }
 

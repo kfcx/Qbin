@@ -4,7 +4,7 @@
  */
 
 // 缓存配置
-const CACHE_VERSION = 'v1.43';
+const CACHE_VERSION = 'v1.48';
 const STATIC_CACHE_NAME = `qbin-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `qbin-dynamic-${CACHE_VERSION}`;
 const CDN_CACHE_NAME = `qbin-cdn-${CACHE_VERSION}`;
@@ -32,6 +32,7 @@ const STATIC_RESOURCES = [
     '/manifest.json',
     '/document',
     '/static/',
+    '/p/',
     '/home',
 ];
 
@@ -51,7 +52,6 @@ const PAGE_TEMPLATES = [
     '/e',
     '/c',
     '/m',
-    '/p',
 ];
 
 // 实时数据 - 采用网络优先策略
@@ -168,7 +168,7 @@ self.addEventListener('fetch', event => {
         const path = url.pathname;
 
         // 处理根路径和模板路径
-        if (path === '/' || path.match(/^\/[pcme](\/.*)?$/)) {
+        if (path === '/' || path.match(/^\/[cme](\/.*)?$/)) {
             event.respondWith(handleTemplateRoutes(request));
             return;
         }
@@ -574,7 +574,7 @@ function isStaticResource(url) {
 function isPageTemplate(url) {
     const path = new URL(url).pathname;
     return PAGE_TEMPLATES.some(templatePath => path === templatePath) ||
-           path.match(/^\/[pcme](\/.*)?$/);
+           path.match(/^\/[cme](\/.*)?$/);
 }
 
 function isRealtimeResource(url) {
