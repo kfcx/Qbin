@@ -1,107 +1,146 @@
-<div align="center"><a name="readme-top"></a>
-<img src="https://s3.tebi.io/lite/favicon.svg" width="20%" alt="QBin LOGO" title="QBin LOGO" />
-<h1>QBin - Quick Storage</h1>
+<div align="center">
+  <h1>QBin · Quick Storage</h1>
 
-✨ Lightweight, elegant data storage service - more convenient than cloud drives, easily store and access text, images, videos, and any other data.
+  <img src="https://s3.tebi.io/lite/favicon.svg" width="20%" alt="QBin LOGO" title="QBin LOGO" />
 
-**English** · [简体中文](README.md) · [Demo Website](https://qbin.me) · [Documentation](Docs/document.md) · [Self-hosting Guide](Docs/self-host.md)
+  > ✨ A lightweight Cloud Note & PasteBin alternative. Save text, code, images, videos, and any content with just one click for easier sharing!
+
+  [English] · [**简体中文**](README.md) · [Demo Website](https://qbin.me) · [Documentation](Docs/document.md) · [Self-hosting Guide](Docs/self-host.md) · [REST API](Docs/REST%20API.md) 
 </div>
 
-## 📝 Project Overview
-✨ A lightweight, elegant all-purpose data storage service, built around an online Code and Markdown editor, enabling one-click storage of text, code, images, videos, and any other data. <br/>
-Distributed architecture + multi-level caching makes storage and retrieval faster, simple like a notepad, more convenient than cloud drives - record on the go, store and use instantly, starting your era of cloud data freedom!
 
-## ✨ Key Features
-- 🚀 **Convenient Storage**: Quickly save text, code, images, videos, and various data types
-- 🔒 **Secure & Controllable**: Support for custom access paths and password protection
-- ⏱️ **Flexible Expiration**: Set content expiration times
-- 🌓 **Dark Mode**: Perfect adaptation to both light and dark themes
-- 📱 **Comprehensive Compatibility**: Support for desktop and mobile devices
-- 🔄 **Auto-Save**: Scheduled local backups to prevent data loss
-- 🔑 **Third-party Login**: OAuth2 authorization support (Google, GitHub, Microsoft, Custom)
+## 🖼️ Feature Preview
+Mobile
+---
+![Mobile photos](https://s3.tebi.io/lite/mobile-preview.jpg)
 
-## 🖼️ Preview
-|                                       Desktop Interface                                         |                                     Mobile Interface                                      |
-|:-------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------:|
-| <img src="https://s3.tebi.io/lite/windows.png" alt="Desktop Preview" title="Desktop Preview" width="70%"> | <img src="https://s3.tebi.io/lite/mobile.png" alt="Mobile Interface" title="Mobile Interface" width="30%"> |
+Windows
+----
+
+![Windows photos](https://s3.tebi.io/lite/windows-preview.jpg)
+
+
+## 📝 Project Introduction
+
+QBin focuses on "fast, secure, and lightweight" online editing and content sharing, suitable for personal notes, temporary storage, team collaboration, cross-platform sharing, and many other scenarios.
+- Frontend uses pure HTML+JS+CSS without heavy frameworks, featuring Monaco code editor, Cherry Markdown renderer, and a universal editor for various content types.
+- Backend uses Deno Oak framework + PostgreSQL database, combined with Deno KV and Edge Cache for multi-level caching, providing excellent performance for both reading and writing.
+- Built-in PWA and IndexedDB support lets you edit, save, and preview even when offline.
+- Freely set access paths, passwords, and expiration dates for flexible sharing while protecting privacy.
+- Compared to traditional PasteBin services, QBin offers richer editing capabilities, multi-layered security, and higher extensibility.
+
+## ✨ Project Features
+
+- 🚀 **Simple Storage**: Easily save text, code, images, audio/video, and other content with one-click sharing
+- 🔒 **Secure Control**: Support for custom access paths and password protection
+- ⏱️ **Flexible Expiration**: Set storage validity periods with automatic deletion of expired data
+- 🌓 **Light/Dark Mode**: Support for dark/light/system theme for comfortable viewing day or night
+- 📱 **PWA Offline**: Edit and access local cache without internet, take notes anytime, anywhere
+- 🔄 **Real-time Saving**: Automatic periodic saving to local and remote storage to prevent data loss
+- 🔑 **Multiple Logins**: Support for username/password and OAuth2 (Google, GitHub, Microsoft, custom)
+- ♻️ **Multi-level Cache**: Combining Deno KV, PostgreSQL, Edge Cache, and ETag for faster access
+- ⚡ **One-click Deploy**: Support for Docker Compose, Deno Deploy, and more for easy self-hosting
 
 ## 🚀 Quick Start Guide
-### Login
-1. Access your deployed QBin service
-2. Default admin password is `qbin` (can be modified via the `ADMIN_PASSWORD` environment variable)
-3. After logging in, select your preferred editor (Multi-function, Code, or Markdown)
 
-### Share Content
-1. Log in and access the editor interface
-2. Set access path and password (optional)
-3. Set expiration time (optional)
-4. Enter text or upload files
-5. Content is automatically saved and a sharing link is generated
+1. Visit a deployed QBin link (or local environment)
+2. Enter the default admin username and password
+3. After logging in, enter content or paste/drag-and-drop files in any editor (General/Code/Markdown)
+4. Set link path, expiration time, password protection (optional)
+5. Content is automatically saved and sharing links or QR codes are generated
+6. Visit the link to view or download content (password required if set)
 
-### Access Content
-1. Access content via sharing link or QR code
-2. If password protected, enter the correct password
-3. View or download content
+For more detailed usage, please refer to the [User Guide](Docs/document.md).
 
-> For detailed instructions, please check the [User Guide](https://qbin.me/r/document)
+## 🔧 Technology Stack
+Frontend:
+- Pure HTML + JS + CSS (no third-party frameworks)
+- Monaco code editor + Cherry Markdown + Universal editor
+
+Backend:
+- Deno Oak framework
+- PostgreSQL database
+- Deno KV & Edge Cache multi-level caching + ETag cache validation
+
+Security and Authentication:
+- JWT + username/password
+- OAuth2 login (Google, GitHub, Microsoft, Custom)
 
 ## ⚡ Self-hosting Deployment
-### Docker Compose One-click Deployment (Recommended)
+Several deployment methods are provided below.
+
+### Docker Compose (Recommended)
+
 ```bash
 git clone https://github.com/Quick-Bin/qbin.git
 cd qbin
 docker-compose up -d
 ```
-Access http://localhost:8000 to use the QBin service. All configurations are preset in docker-compose.yml (default admin password is `qbin`).
 
-### Docker Command Line Deployment
+After running, visit http://localhost:8000 to start using.
+(Default admin account and password can be modified in docker-compose.yml)
+
+### Using Docker Directly
+
+Suitable for environments with existing PostgreSQL:
 ```bash
 # Pull the latest image
 docker pull naiher/qbin:latest
+
 # Start the container
 docker run -it -p 8000:8000 \
-  -e DATABASE_URL="postgresql://user:password@localhost:5432:/local:main?sslmode=require" \
+  -e DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require" \
   -e JWT_SECRET="your_jwt_secret" \
   -e ADMIN_PASSWORD="qbin" \
   -e ADMIN_EMAIL="admin@qbin.github" \
   naiher/qbin
 ```
-After starting, access http://localhost:8000 to use the QBin service.
 
-> Note: Using Docker command line deployment requires a PostgreSQL database. [Neon](https://neon.tech/), [Aiven](https://aiven.io/), or [Render](https://render.com/docs/deploy-mysql) provide free database solutions.
+Then visit http://localhost:8000.
+> Tip: You can use free PostgreSQL from [Neon](https://neon.tech/), [Aiven](https://aiven.io/), or [Render](https://render.com/docs/deploy-mysql).
 
 ### Other Deployment Methods
-For Deno Deploy or local development, please refer to the [Self-hosting Guide](Docs/self-host.md) for detailed steps.
+
+QBin can run on Deno Deploy, local Deno environments, and other platforms. See [Self-hosting Guide](Docs/self-host.md) for details.
 
 ## 🚀 TODO
 - [ ] Implement end-to-end encryption
-- [x] Add personal center dashboard
-- [x] Add Markdown editor
-- [x] Add API for third-party integration
-- [x] Add Docker deployment support
-- [x] Implement OAuth2 (Google, Github, Microsoft, Custom) authorization login
-- [x] Backend hot-cold multi-level storage
-- [x] Adapt to mobile devices and dark mode
-- [x] ETag negotiation cache
-- [x] Implement local IndexedDB storage
-- [x] Support for custom paths and passwords
-- [x] Custom storage expiration times
-- [x] Scheduled auto-save of local data
+- [x] Markdown, audio/video, image preview
+- [x] Personal dashboard
+- [x] Docker deployment support
+- [x] Third-party OAuth2 login (Google / GitHub / Microsoft / Custom)
+- [x] Multi-level hot-cold storage
+- [x] Mobile + light/dark/system theme adaptation
+- [x] ETag cache + IndexedDB local storage
+- [x] Custom storage path, password, and expiration
+- [x] Automatic local data backup
 
-## 🤝 Contributing
-You're welcome to contribute to the project through:
-1. [Fork the project](https://github.com/Quick-Bin/Qbin/fork)
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Submit a Pull Request
+## 🤝 How to Contribute
 
-## ❤ Sponsorship
-If QBin has been helpful to you, please consider sponsoring through [Afdian](https://afdian.com/a/naihe)!
+1. Fork this project
+2. Create a new branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m "Add amazing feature"`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Create a Pull Request and wait for it to be merged
+
+## ❤ Sponsorship Support
+
+If QBin has helped you or your team, please consider sponsoring through [Afdian](https://afdian.com/a/naihe) to help the project continue to update and improve!
 
 <a title="QBin Sponsor" href="https://afdian.com/a/naihe" target="_blank" rel="noopener">
-  <img src=https://s3.tebi.io/lite/Sponsor.svg width=25% alt="QBin Sponsor" title="QBin Sponsor" />
+  <img src="https://s3.tebi.io/lite/Sponsor.svg" width="25%" alt="QBin Sponsor" title="QBin Sponsor" />
 </a>
 
+## 😘 Acknowledgments
+Special thanks to the projects that provided support and inspiration:
+
+- [Cherry Markdown](https://github.com/Tencent/cherry-markdown)
+- [Monaco Editor](https://github.com/microsoft/monaco-editor)
+- [deno_docker](https://github.com/denoland/deno_docker)
+- [bin](https://github.com/wantguns/bin)
+- [excalidraw](https://github.com/excalidraw/excalidraw)
+
 ## License
-This project is open-sourced under the [GPL-3.0](LICENSE) license.
+
+This project is open-source under the [GPL-3.0](LICENSE) license. Feel free to use and develop it further.
+Let's build an open and efficient cloud storage and sharing ecosystem together!
