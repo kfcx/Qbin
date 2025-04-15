@@ -75,6 +75,16 @@ class QBinMDEditor extends QBinEditorBase {
             },
             toc: true,
         };
+
+        function getThemePreference() {
+            const savedTheme = localStorage.getItem('qbin-theme') || 'system';
+            if (savedTheme === 'dark') return 'dark';
+            if (savedTheme === 'light') return 'light';
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ?
+                'dark' : 'light';
+        }
+
+        const currentTheme = getThemePreference();
         // TODO 实现sidebar Zen模式
         const basicConfig = {
             id: 'markdown',
@@ -143,7 +153,7 @@ class QBinMDEditor extends QBinEditorBase {
                 writingStyle: 'normal',
             },
             themeSettings: {
-                mainTheme: 'light',
+                mainTheme: currentTheme,
                 codeBlockTheme: 'default',
             },
             callback: {
@@ -179,6 +189,7 @@ class QBinMDEditor extends QBinEditorBase {
         this.initializePasswordPanel();
         return window.cherry;
     }
+
 
     getEditorContent() {
         return window.cherry.getMarkdown();

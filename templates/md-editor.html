@@ -1,76 +1,99 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('qbin-theme') || 'system';
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            let finalTheme;
+            if (savedTheme === 'system') {
+                finalTheme = prefersDark ? 'dark' : 'light';
+            } else {
+                finalTheme = savedTheme;
+            }
+            
+            if (finalTheme === 'dark') {
+                        document.documentElement.classList.add('dark-theme');
+                document.documentElement.setAttribute('data-theme', 'dark');
+                    } else {
+                        document.documentElement.classList.add('light-theme');
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+            
+            window.initialTheme = finalTheme;
+        })();
+    </script>
+    <meta name="color-scheme" content="light dark">
     <link href=https://qbin.me/ rel=canonical>
     <title>QBin</title>
     <meta charset="UTF-8">
     <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name=viewport>
-    <link href=/favicon.ico rel=icon type=image/svg+xml>
-    <link href=/static/css/panel-common.css rel=stylesheet>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/cherry-markdown@0.8.58/dist/cherry-markdown.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4a6cf7">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="QBin">
-    <link rel="apple-touch-icon" href="/static/img/favicon.svg">
     <style>
+        html.dark-theme {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        html.light-theme {
+            background-color: #f5f6f7;
+            color: #2c3e50;
+        }
+
         :root {
             /* Light theme default colors */
             --background-color: #f5f6f7;
             --text-color: #2c3e50;
             --editor-bg: #ffffff;
             --editor-shadow: 0 1px 3px rgba(0, 0, 0, 0.04),
-                             0 2px 8px rgba(0, 0, 0, 0.06),
-                             0 0 0 1px rgba(0, 0, 0, 0.02),
-                             inset 0 0 20px rgba(0, 0, 0, 0.005),
-                             0 4px 16px rgba(0, 0, 0, 0.02);
+            0 2px 8px rgba(0, 0, 0, 0.06),
+            0 0 0 1px rgba(0, 0, 0, 0.02),
+            inset 0 0 20px rgba(0, 0, 0, 0.005),
+            0 4px 16px rgba(0, 0, 0, 0.02);
             --editor-focus-shadow: 0 2px 6px rgba(0, 0, 0, 0.05),
-                                  0 4px 12px rgba(0, 0, 0, 0.08),
-                                  0 0 0 1px rgba(24, 144, 255, 0.08),
-                                  inset 0 0 30px rgba(0, 0, 0, 0.002),
-                                  0 8px 24px rgba(0, 0, 0, 0.03);
+            0 4px 12px rgba(0, 0, 0, 0.08),
+            0 0 0 1px rgba(24, 144, 255, 0.08),
+            inset 0 0 30px rgba(0, 0, 0, 0.002),
+            0 8px 24px rgba(0, 0, 0, 0.03);
             --editor-drag-bg: rgba(255, 255, 255, 0.98);
             --editor-drag-shadow: 0 1px 3px rgba(0, 0, 0, 0.04),
-                                  0 2px 10px rgba(0, 0, 0, 0.08),
-                                  0 0 0 1px rgba(24, 144, 255, 0.15),
-                                  inset 0 0 20px rgba(0, 0, 0, 0.004);
+            0 2px 10px rgba(0, 0, 0, 0.08),
+            0 0 0 1px rgba(24, 144, 255, 0.15),
+            inset 0 0 20px rgba(0, 0, 0, 0.004);
             --scrollbar-thumb: rgba(0, 0, 0, 0.2);
             --scrollbar-thumb-hover: rgba(0, 0, 0, 0.4);
 
             /* Panel & Form elements */
             --panel-bg: rgba(252, 252, 252, 0.92);
             --panel-gradient: radial-gradient(circle at top right,
-                                              rgba(240, 240, 240, 0.8) 0%,
-                                              rgba(252, 252, 252, 0.3) 60%,
-                                              rgba(252, 252, 252, 0.92) 100%);
+            rgba(240, 240, 240, 0.8) 0%,
+            rgba(252, 252, 252, 0.3) 60%,
+            rgba(252, 252, 252, 0.92) 100%);
             --panel-shadow: 0 3px 16px rgba(0, 0, 0, 0.06),
-                            0 8px 30px rgba(0, 0, 0, 0.08),
-                            0 0 0 1px rgba(0, 0, 0, 0.02),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.9),
-                            0 14px 45px rgba(0, 0, 0, 0.05),
-                            0 1px 3px rgba(0, 0, 0, 0.1);
+            0 8px 30px rgba(0, 0, 0, 0.08),
+            0 0 0 1px rgba(0, 0, 0, 0.02),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            0 14px 45px rgba(0, 0, 0, 0.05),
+            0 1px 3px rgba(0, 0, 0, 0.1);
             --section-bg: rgba(255, 255, 255, 0.5);
             --section-hover-bg: rgba(255, 255, 255, 0.65);
             --section-title-color: #444;
             --section-border: rgba(0, 0, 0, 0.06);
             --section-shadow: 0 1px 3px rgba(0, 0, 0, 0.02),
-                              inset 0 1px 0 rgba(255, 255, 255, 0.9),
-                              0 1px 2px rgba(0, 0, 0, 0.03);
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            0 1px 2px rgba(0, 0, 0, 0.03);
             --section-hover-shadow: 0 2px 5px rgba(0, 0, 0, 0.03),
-                                   inset 0 1px 0 rgba(255, 255, 255, 1),
-                                   0 1px 3px rgba(0, 0, 0, 0.04);
+            inset 0 1px 0 rgba(255, 255, 255, 1),
+            0 1px 3px rgba(0, 0, 0, 0.04);
             --input-bg: rgba(255, 255, 255, 0.7);
             --input-color: #333;
             --input-border: rgba(0, 0, 0, 0.08);
             --input-shadow: 0 1px 2px rgba(0, 0, 0, 0.02),
-                            inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+            inset 0 0 0 1px rgba(255, 255, 255, 0.6);
             --input-focus-border: rgba(24, 144, 255, 0.4);
             --input-focus-bg: rgba(255, 255, 255, 0.95);
             --input-focus-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1),
-                                 inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+            inset 0 0 0 1px rgba(255, 255, 255, 0.8);
             --label-color: #555;
             --label-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
             --label-dot-bg: rgba(0, 0, 0, 0.3);
@@ -83,32 +106,32 @@
             --social-link-hover-color: #1890ff;
             --social-link-border: rgba(0, 0, 0, 0.04);
             --social-link-shadow: 0 1px 2px rgba(0, 0, 0, 0.02),
-                                 inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            inset 0 1px 0 rgba(255, 255, 255, 0.7);
             --social-link-hover-shadow: 0 4px 8px rgba(0, 0, 0, 0.04),
-                                       0 2px 4px rgba(24, 144, 255, 0.08),
-                                       inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            0 2px 4px rgba(24, 144, 255, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
             --bookmark-bg: rgba(252, 252, 252, 0.92);
             --bookmark-hover-bg: rgba(255, 255, 255, 0.97);
             --bookmark-shadow: 0 2px 6px rgba(0, 0, 0, 0.08),
-                              0 4px 10px rgba(0, 0, 0, 0.05),
-                              0 0 0 1px rgba(0, 0, 0, 0.04),
-                              inset 0 0 16px rgba(0, 0, 0, 0.01),
-                              0 6px 16px rgba(0, 0, 0, 0.03);
+            0 4px 10px rgba(0, 0, 0, 0.05),
+            0 0 0 1px rgba(0, 0, 0, 0.04),
+            inset 0 0 16px rgba(0, 0, 0, 0.01),
+            0 6px 16px rgba(0, 0, 0, 0.03);
             --bookmark-hover-shadow: 0 3px 10px rgba(24, 144, 255, 0.12),
-                                    0 4px 14px rgba(0, 0, 0, 0.08),
-                                    0 0 0 1px rgba(24, 144, 255, 0.15),
-                                    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
-                                    0 8px 20px rgba(0, 0, 0, 0.06);
+            0 4px 14px rgba(0, 0, 0, 0.08),
+            0 0 0 1px rgba(24, 144, 255, 0.15),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+            0 8px 20px rgba(0, 0, 0, 0.06);
 
             /* Upload elements */
             --upload-button-bg: transparent;
             --upload-button-color: #666;
             --upload-button-shadow: 0 2px 8px rgba(0, 0, 0, 0.05),
-                                   0 1px 3px rgba(0, 0, 0, 0.03),
-                                   inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+            0 1px 3px rgba(0, 0, 0, 0.03),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.7);
             --upload-button-hover-bg: rgba(255, 255, 255, 0.97);
             --upload-button-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.06),
-                                         0 2px 6px rgba(24, 144, 255, 0.08);
+            0 2px 6px rgba(24, 144, 255, 0.08);
             --upload-icon-color: rgba(24, 144, 255, 0.8);
             --upload-text-color: #666;
             --upload-text-hover-color: #444;
@@ -130,7 +153,7 @@
             --checkbox-bg: rgba(255, 255, 255, 0.7);
             --checkbox-border: rgba(0, 0, 0, 0.15);
             --checkbox-shadow: 0 1px 2px rgba(0, 0, 0, 0.02),
-                              inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
             --checkbox-checked-bg: rgba(24, 144, 255, 0.2);
             --checkbox-checked-border: rgba(24, 144, 255, 0.4);
             --checkbox-check-color: #1890ff;
@@ -149,55 +172,56 @@
             --button-primary-hover-bg: #40a9ff;
             --button-secondary-hover-bg: rgba(0, 0, 0, 0.08);
         }
+
         .dark-theme {
             --background-color: #1a1a1a;
             --text-color: #e0e0e0;
             --editor-bg: #242424;
             --editor-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
-                             0 0 0 1px rgba(255, 255, 255, 0.05);
+            0 0 0 1px rgba(255, 255, 255, 0.05);
             --editor-focus-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
-                                  0 6px 16px rgba(0, 0, 0, 0.2),
-                                  0 0 0 1px rgba(24, 144, 255, 0.15),
-                                  inset 0 0 20px rgba(0, 0, 0, 0.15),
-                                  0 8px 24px rgba(0, 0, 0, 0.18);
+            0 6px 16px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(24, 144, 255, 0.15),
+            inset 0 0 20px rgba(0, 0, 0, 0.15),
+            0 8px 24px rgba(0, 0, 0, 0.18);
             --editor-drag-bg: rgba(40, 40, 40, 0.98);
             --editor-drag-shadow: 0 1px 3px rgba(0, 0, 0, 0.2),
-                                  0 2px 10px rgba(0, 0, 0, 0.15),
-                                  0 0 0 1px rgba(24, 144, 255, 0.2),
-                                  inset 0 0 20px rgba(0, 0, 0, 0.1);
+            0 2px 10px rgba(0, 0, 0, 0.15),
+            0 0 0 1px rgba(24, 144, 255, 0.2),
+            inset 0 0 20px rgba(0, 0, 0, 0.1);
             --scrollbar-thumb: rgba(255, 255, 255, 0.2);
             --scrollbar-thumb-hover: rgba(255, 255, 255, 0.4);
 
             /* Panel & Form elements */
             --panel-bg: rgba(36, 36, 36, 0.92);
             --panel-gradient: radial-gradient(circle at top right,
-                                             rgba(50, 50, 50, 0.8) 0%,
-                                             rgba(36, 36, 36, 0.3) 60%,
-                                             rgba(36, 36, 36, 0.92) 100%);
+            rgba(50, 50, 50, 0.8) 0%,
+            rgba(36, 36, 36, 0.3) 60%,
+            rgba(36, 36, 36, 0.92) 100%);
             --panel-shadow: 0 2px 16px rgba(0, 0, 0, 0.25),
-                            0 10px 40px rgba(0, 0, 0, 0.3),
-                            0 0 0 1px rgba(255, 255, 255, 0.08),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                            0 1px 3px rgba(0, 0, 0, 0.3);
+            0 10px 40px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255, 255, 255, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05),
+            0 1px 3px rgba(0, 0, 0, 0.3);
             --section-bg: rgba(50, 50, 50, 0.3);
             --section-hover-bg: rgba(55, 55, 55, 0.4);
             --section-title-color: rgba(255, 255, 255, 0.85);
             --section-border: rgba(255, 255, 255, 0.08);
             --section-shadow: 0 1px 3px rgba(0, 0, 0, 0.1),
-                             inset 0 1px 0 rgba(255, 255, 255, 0.03),
-                             0 1px 2px rgba(0, 0, 0, 0.15);
+            inset 0 1px 0 rgba(255, 255, 255, 0.03),
+            0 1px 2px rgba(0, 0, 0, 0.15);
             --section-hover-shadow: 0 2px 5px rgba(0, 0, 0, 0.15),
-                                   inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                                   0 1px 3px rgba(0, 0, 0, 0.2);
+            inset 0 1px 0 rgba(255, 255, 255, 0.05),
+            0 1px 3px rgba(0, 0, 0, 0.2);
             --input-bg: rgba(48, 48, 48, 0.7);
             --input-color: rgba(255, 255, 255, 0.92);
             --input-border: rgba(255, 255, 255, 0.12);
             --input-shadow: 0 1px 2px rgba(0, 0, 0, 0.15),
-                           inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+            inset 0 0 0 1px rgba(255, 255, 255, 0.03);
             --input-focus-border: rgba(24, 144, 255, 0.6);
             --input-focus-bg: rgba(52, 52, 52, 0.95);
             --input-focus-shadow: 0 0 0 3px rgba(24, 144, 255, 0.15),
-                                 inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             --label-color: rgba(255, 255, 255, 0.75);
             --label-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
             --label-dot-bg: rgba(255, 255, 255, 0.4);
@@ -210,29 +234,29 @@
             --social-link-hover-color: #40a9ff;
             --social-link-border: rgba(255, 255, 255, 0.08);
             --social-link-shadow: 0 1px 2px rgba(0, 0, 0, 0.1),
-                                 inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            inset 0 1px 0 rgba(255, 255, 255, 0.03);
             --social-link-hover-shadow: 0 4px 10px rgba(0, 0, 0, 0.15),
-                                       0 2px 5px rgba(24, 144, 255, 0.1),
-                                       inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            0 2px 5px rgba(24, 144, 255, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
             --bookmark-bg: rgba(36, 36, 36, 0.9);
             --bookmark-hover-bg: rgba(42, 42, 42, 0.95);
             --bookmark-shadow: 0 1px 3px rgba(0, 0, 0, 0.25),
-                              0 2px 6px rgba(0, 0, 0, 0.2),
-                              0 0 0 1px rgba(255, 255, 255, 0.06),
-                              inset 0 0 16px rgba(0, 0, 0, 0.15),
-                              0 4px 10px rgba(0, 0, 0, 0.2);
+            0 2px 6px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.06),
+            inset 0 0 16px rgba(0, 0, 0, 0.15),
+            0 4px 10px rgba(0, 0, 0, 0.2);
             --bookmark-hover-shadow: 0 3px 8px rgba(0, 0, 0, 0.3),
-                                    0 2px 10px rgba(24, 144, 255, 0.18),
-                                    0 0 0 1px rgba(24, 144, 255, 0.25),
-                                    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-                                    0 6px 16px rgba(0, 0, 0, 0.25);
+            0 2px 10px rgba(24, 144, 255, 0.18),
+            0 0 0 1px rgba(24, 144, 255, 0.25),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+            0 6px 16px rgba(0, 0, 0, 0.25);
 
             /* Upload elements */
             --upload-button-bg: rgba(45, 45, 45, 0.6);
             --upload-button-color: #e0e0e0;
             --upload-button-shadow: 0 1px 3px rgba(0, 0, 0, 0.2),
-                                   0 2px 6px rgba(0, 0, 0, 0.15),
-                                   inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            0 2px 6px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
             --upload-button-hover-bg: rgba(55, 55, 55, 0.7);
             --upload-button-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             --upload-icon-color: rgba(24, 144, 255, 0.6);
@@ -256,7 +280,7 @@
             --checkbox-bg: rgba(60, 60, 60, 0.5);
             --checkbox-border: rgba(255, 255, 255, 0.2);
             --checkbox-shadow: 0 1px 2px rgba(0, 0, 0, 0.1),
-                              inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            inset 0 1px 0 rgba(255, 255, 255, 0.03);
             --checkbox-checked-bg: rgba(24, 144, 255, 0.2);
             --checkbox-checked-border: rgba(24, 144, 255, 0.4);
             --checkbox-check-color: #1890ff;
@@ -275,6 +299,7 @@
             --button-primary-hover-bg: #40a9ff;
             --button-secondary-hover-bg: rgba(255, 255, 255, 0.12);
         }
+
         .light-theme {
             /* All variables remain as defined in :root */
         }
@@ -326,20 +351,21 @@
         }
     </style>
     <script>
-        (function() {
+        (function () {
             function applyTheme() {
                 document.documentElement.classList.remove('dark-theme', 'light-theme');
                 const savedTheme = localStorage.getItem('qbin-theme') || 'system';
                 const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
                 document.documentElement.setAttribute('data-theme', savedTheme);
-                if (savedTheme === 'system'){
+                
+                if (savedTheme === 'system') {
                     if (isDark) {
                         document.documentElement.classList.add('dark-theme');
                     } else {
                         document.documentElement.classList.add('light-theme');
                     }
-                    window?.cherry?.setTheme(isDark?'dark':'light');
-                }else {
+                    window?.cherry?.setTheme(isDark ? 'dark' : 'light');
+                } else {
                     if (savedTheme === 'dark') {
                         document.documentElement.classList.add('dark-theme');
                         window?.cherry?.setTheme('dark');
@@ -349,20 +375,33 @@
                     }
                 }
             }
-            applyTheme();
+
+            if (!window.initialTheme) {
+                applyTheme();
+            } else {
+                window.addEventListener('load', function() {
+                    window?.cherry?.setTheme(
+                        document.documentElement.classList.contains('dark-theme') ? 'dark' : 'light'
+                    );
+                });
+            }
+            
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
                 if (localStorage.getItem('qbin-theme') === 'system' || !localStorage.getItem('qbin-theme')) {
                     applyTheme();
                 }
             });
+            
             window.addEventListener('storage', (event) => {
                 if (event.key === 'qbin-theme') {
                     applyTheme();
                 }
             });
+            
             window.addEventListener('themeChange', () => {
                 applyTheme();
             });
+            
             if (!window.qbinToggleTheme) {
                 window.qbinToggleTheme = (theme) => {
                     localStorage.setItem('qbin-theme', theme);
@@ -371,6 +410,19 @@
             }
         })();
     </script>
+    <link href=/favicon.ico rel=icon type=image/svg+xml>
+    <link href=/static/css/panel-common.css rel=stylesheet>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.jsdelivr.net/npm/cherry-markdown@0.8.58/dist/cherry-markdown.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+          integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4a6cf7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="QBin">
+    <link rel="apple-touch-icon" href="/static/img/favicon.svg">
 </head>
 <body>
 <div class="header">
@@ -492,7 +544,9 @@
 </div>
 </body>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@4.6.0/dist/echarts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+        integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+        crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@8.11.1/dist/mermaid.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cherry-markdown@0.8.58/dist/cherry-markdown.core.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cherry-markdown@0.8.58/dist/addons/cherry-code-block-mermaid-plugin.js"></script>

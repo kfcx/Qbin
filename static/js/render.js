@@ -14,6 +14,16 @@ class QBinViewer {
         if (window.cherry) {
             window.cherry = null;
         }
+
+        function getThemePreference() {
+            const savedTheme = localStorage.getItem('qbin-theme') || 'system';
+            if (savedTheme === 'dark') return 'dark';
+            if (savedTheme === 'light') return 'light';
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ?
+                'dark' : 'light';
+        }
+
+        const currentTheme = getThemePreference();
         if (contentType.startsWith("text/plain")) {
             const cherryConfig = {
                 id: 'qbin-viewer',
@@ -59,7 +69,7 @@ class QBinViewer {
                     },
                 },
                 themeSettings: {
-                    mainTheme: 'light',
+                    mainTheme: currentTheme,
                     inlineCodeTheme: 'default',
                     codeBlockTheme: 'default',
                     toolbarTheme: 'default'
@@ -134,7 +144,7 @@ class QBinViewer {
                     },
                 },
                 themeSettings: {
-                    mainTheme: 'light',
+                    mainTheme: currentTheme,
                     codeBlockTheme: 'default',
                 },
             };

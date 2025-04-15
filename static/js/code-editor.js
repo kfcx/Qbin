@@ -10,7 +10,6 @@ class QBinCodeEditor extends QBinEditorBase {
         this.initialize();
     }
 
-    // Add this helper method
     getThemePreference() {
         const savedTheme = localStorage.getItem('qbin-theme') || 'system';
         if (savedTheme === 'dark') return 'dark-theme';
@@ -80,10 +79,10 @@ class QBinCodeEditor extends QBinEditorBase {
     applyEditorTheme() {
         // Get user preference
         const savedTheme = localStorage.getItem('qbin-theme') || 'system';
-        
+
         // First, update document class to ensure panel styling changes
         document.documentElement.classList.remove('light-theme', 'dark-theme');
-        
+
         let monacoTheme;
         if (savedTheme === 'dark') {
             // User explicitly chose dark
@@ -99,12 +98,12 @@ class QBinCodeEditor extends QBinEditorBase {
             monacoTheme = prefersDark ? 'dark-theme' : 'light-theme';
             document.documentElement.classList.add(prefersDark ? 'dark-theme' : 'light-theme');
         }
-        
+
         // Then update Monaco theme
         if (monaco && monaco.editor) {
             monaco.editor.setTheme(monacoTheme);
         }
-        
+
         this.currentTheme = monacoTheme;
     }
 
@@ -129,7 +128,7 @@ class QBinCodeEditor extends QBinEditorBase {
         window.addEventListener('themeChange', () => {
             this.applyEditorTheme();
         });
-        
+
         // Create a global theme utility function for UI elements to use
         window.qbinToggleTheme = (theme) => {
             localStorage.setItem('qbin-theme', theme);
@@ -182,18 +181,15 @@ class QBinCodeEditor extends QBinEditorBase {
     async initMonacoEditor() {
         return new Promise((resolve) => {
             require.config({paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs'}});
-
             // Configure Monaco loader with correct theme before editor loads
             window.MonacoEnvironment = {
                 getTheme: () => this.currentTheme
             };
-
             require(['vs/editor/editor.main'], () => {
                 this.setupEditorThemes();
-                
                 this.editor = monaco.editor.create(document.getElementById('editor'), {
                     value: this.editorBuffer.content,
-                    language: 'plaintext',
+                    language: 'html',
                     automaticLayout: true,
                     theme: this.currentTheme, // Use preloaded theme
                     minimap: {enabled: window.innerWidth > 768},
@@ -207,19 +203,34 @@ class QBinCodeEditor extends QBinEditorBase {
                     cursorBlinking: 'smooth',
                     cursorSmoothCaretAnimation: true,
                     fixedOverflowWidgets: true,
-                    contextmenu: true,
-                    matchBrackets: "always"
+                    contextmenu: false,
+                    matchBrackets: "always",
+                    mouseWheelZoom: true,
                 });
-
+                this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Alt | monaco.KeyCode.KeyL, function () {
+                    monaco.editor.getEditors()[0].getAction('editor.action.formatDocument').run();
+                });
+                // 折叠/展开当前代码块
+                this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Minus, () => {
+                    monaco.editor.getEditors()[0].getAction('editor.fold').run();
+                });
+                this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Equal, () => {
+                    monaco.editor.getEditors()[0].getAction('editor.unfold').run();
+                });
+                // 折叠/展开所有代码块
+                this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Minus, () => {
+                    monaco.editor.getEditors()[0].getAction('editor.foldAll').run();
+                });
+                this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Equal, () => {
+                    monaco.editor.getEditors()[0].getAction('editor.unfoldAll').run();
+                });
                 // Remove the temporary class now that Monaco has loaded
                 const editorEl = document.getElementById('editor');
                 if (editorEl) {
                     editorEl.classList.remove('monaco-dark', 'monaco-light');
                 }
-
                 // Mark editor as ready
                 this.editorBuffer.isReady = true;
-                
                 this.initLanguageSelector();
                 this.setupEditorThemeListener();
                 this.setupEditorChangeListener();
@@ -245,4 +256,5 @@ class QBinCodeEditor extends QBinEditorBase {
         }
     }
 }
+
 new QBinCodeEditor();
