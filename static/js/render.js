@@ -14,7 +14,7 @@ class QBinViewer {
         if (window.cherry) {
             window.cherry = null;
         }
-        if (contentType.startsWith("text/") && !contentType.includes("markdown")) {
+        if (contentType.startsWith("text/plain")) {
             const cherryConfig = {
                 id: 'qbin-viewer',
                 value: content,
@@ -68,6 +68,23 @@ class QBinViewer {
             window.cherry = new Cherry(cherryConfig);
             this.contentType = contentType;
         } else {
+            Cherry.usePlugin(CherryCodeBlockMermaidPlugin, {
+          mermaid: window.mermaid,
+          theme: 'default',
+          sequence: {
+            useMaxWidth: false,
+            showSequenceNumbers: true,
+            mirrorActors: true,
+            messageAlign: 'center'
+          },
+          flowchart: {
+            htmlLabels: true,
+            curve: 'linear'
+          }
+        });
+            Cherry.usePlugin(CherryTableEchartsPlugin, {
+              mermaid: window.echarts,
+            });
             const cherryConfig = {
                 id: 'qbin-viewer',
                 nameSpace: 'qbin',
@@ -171,10 +188,10 @@ class QBinViewer {
         this.showLoading();
         const url = `/r/${this.currentPath.key}/${this.currentPath.pwd}`;
         const response = await API.fetchNet(url);
-        if (contentType?.startsWith('text/markdown')) {
-            await this.renderTextContent(response, contentType, contentLength);
-        } else if (contentType?.startsWith('text/')) {
+        if (contentType?.startsWith('text/plain')) {
             await this.renderPlainTextContent(response, contentType, contentLength);
+        } else if (contentType?.startsWith('text/')) {
+            await this.renderTextContent(response, contentType, contentLength);
         } else if (contentType?.startsWith('image/')) {
             await this.renderImageContent(response, contentType, url, contentLength);
         } else if (contentType?.startsWith('audio/')) {
@@ -229,7 +246,9 @@ class QBinViewer {
     }
 
     async renderTextContent(response, contentType) {
-        const contentText = await response.text();
+        let language = contentType.includes("text/x-")? contentType.substring(7): contentType.substring(5);
+        language = language.split("; ")[0];
+        const contentText = contentType.includes("markdown")?await response.text():`\`\`\`${language}\n${await response.text()}`;
         this.initViewer(contentText, contentType);
         this.hideLoading();
     }
@@ -414,6 +433,9 @@ class QBinViewer {
             let content = '';
             if (window.cherry) {
                 content = window.cherry.getMarkdown();
+                if (!(this.contentType?.startsWith('text/plain') || this.contentType?.includes('markdown'))) {
+                    content = content.substring(content.indexOf('\n') + 1);
+                }
             } else {
                 // 兼容以前的方式，尝试从textarea获取内容
                 const viewer = document.getElementById('viewer');
@@ -481,6 +503,9 @@ class QBinViewer {
 
     async copyContent() {
         let content = window.cherry.getMarkdown();
+        if (!(this.contentType?.startsWith('text/plain') || this.contentType?.includes('markdown'))) {
+            content = content.substring(content.indexOf('\n') + 1);
+        }
         let tips = "";
         if (this.contentType.startsWith("image/")) {
             const firstImage = document.querySelector('.cherry-markdown img');
