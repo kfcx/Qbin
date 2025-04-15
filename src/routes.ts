@@ -484,8 +484,11 @@ router
     const pdb = MetadataDB.getInstance();
     const metadata = await isCached(key, pwd, pdb);
     if(metadata && "email" in metadata) {
-      if ((metadata.expire || 0) > getTimestamp()){
-        return new Response(ctx, 409, ResponseMessages.KEY_EXISTS);
+      if (metadata.expire > getTimestamp()){
+        const email = await ctx.state.session?.get("user")?.email;
+        if (!(email !== undefined && metadata.email === email)) {
+          return new Response(ctx, 403, ResponseMessages.PERMISSION_DENIED);
+        }
       }
       await handleContentUpdate(ctx, key, pwd || "", pdb);  // 更新
     }else {

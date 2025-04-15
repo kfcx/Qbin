@@ -143,7 +143,7 @@ export async function getManifest(ctx, status=200): Promise<string> {
   ctx.response.status = status;
   ctx.response.headers.set("Content-Type", "application/json");
   ctx.response.headers.set("Cache-Control", "public, max-age=86400");
-  ctx.response.body = await Deno.readTextFile(join(basePath, './manifest.json'));
+  ctx.response.body = await Deno.readTextFile(join(basePath, './static/manifest.json'));
   const hash = cyrb53_str('manifest.json' + ctx.response.body.length);
   ctx.state.metadata = { etag: hash };
 }
