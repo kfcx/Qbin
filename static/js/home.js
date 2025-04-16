@@ -1279,7 +1279,7 @@ class QBinHome {
                     // 更新视觉反馈
                     this.updateEditorRadioVisualFeedback(selectedEditor);
                     // 显示成功提示
-                    this.showToast(`${selectedEditor === 'e' ? '通用编辑器' : selectedEditor === 'm' ? 'Markdown编辑器' : '代码编辑器'}已设置`);
+                    this.showToast(`默认${selectedEditor === 'e' ? '通用编辑器' : selectedEditor === 'm' ? 'Markdown编辑器' : '代码编辑器'}`);
                 }
             });
         });
@@ -1291,7 +1291,7 @@ class QBinHome {
                     const themeValue = e.target.value;
                     localStorage.setItem('qbin-theme', themeValue);
                     this.applyTheme(themeValue);
-                    this.showToast(`已切换到${themeValue === 'light' ? '浅色' : themeValue === 'dark' ? '深色' : '系统'}主题`);
+                    this.showToast(`切换${themeValue === 'light' ? '浅色' : themeValue === 'dark' ? '深色' : '跟随系统'}主题`);
 
                     // 添加点击反馈动画
                     const label = e.target.nextElementSibling;

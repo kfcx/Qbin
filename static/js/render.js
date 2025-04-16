@@ -257,7 +257,7 @@ class QBinViewer {
 
     async renderTextContent(response, contentType) {
         let language = contentType.includes("text/x-")? contentType.substring(7): contentType.substring(5);
-        language = language.split("; ")[0];
+        language = language.split(";")[0];
         const contentText = contentType.includes("markdown")?await response.text():`\`\`\`${language}\n${await response.text()}`;
         this.initViewer(contentText, contentType);
         this.hideLoading();
@@ -300,7 +300,7 @@ class QBinViewer {
     }
 
     debounce(func, wait = 5) {
-        const key = func.name; // 使用函数名作为唯一标识
+        const key = func.name;
         return async (...args) => {
             // 如果正在处理中，直接返回
             if (this.isProcessing) {

@@ -1,29 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('qbin-theme') || 'system';
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            let finalTheme;
-            if (savedTheme === 'system') {
-                finalTheme = prefersDark ? 'dark' : 'light';
-            } else {
-                finalTheme = savedTheme;
-            }
-            
-            if (finalTheme === 'dark') {
-                        document.documentElement.classList.add('dark-theme');
-                document.documentElement.setAttribute('data-theme', 'dark');
-                    } else {
-                        document.documentElement.classList.add('light-theme');
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
-            
-            window.initialTheme = finalTheme;
-        })();
-    </script>
     <meta name="color-scheme" content="light dark">
     <link href=https://qbin.me/ rel=canonical>
     <title>QBin</title>
@@ -351,66 +328,31 @@
         }
     </style>
     <script>
-        (function () {
-            function applyTheme() {
-                document.documentElement.classList.remove('dark-theme', 'light-theme');
-                const savedTheme = localStorage.getItem('qbin-theme') || 'system';
-                const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                
-                if (savedTheme === 'system') {
-                    if (isDark) {
+        (function() {
+            const savedTheme = localStorage.getItem('qbin-theme') || 'system';
+            function applyTheme(theme) {
+                document.documentElement.classList.remove('light-theme', 'dark-theme');
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-theme');
+                } else if (theme === 'light') {
+                    document.documentElement.classList.add('light-theme');
+                } else if (theme === 'system') {
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         document.documentElement.classList.add('dark-theme');
                     } else {
                         document.documentElement.classList.add('light-theme');
                     }
-                    window?.cherry?.setTheme(isDark ? 'dark' : 'light');
-                } else {
-                    if (savedTheme === 'dark') {
-                        document.documentElement.classList.add('dark-theme');
-                        window?.cherry?.setTheme('dark');
-                    } else if (savedTheme === 'light') {
-                        document.documentElement.classList.add('light-theme');
-                        window?.cherry?.setTheme('light');
-                    }
                 }
+                window.dispatchEvent(new CustomEvent('themeChange'));
             }
-
-            if (!window.initialTheme) {
-                applyTheme();
-            } else {
-                window.addEventListener('load', function() {
-                    window?.cherry?.setTheme(
-                        document.documentElement.classList.contains('dark-theme') ? 'dark' : 'light'
-                    );
+            applyTheme(savedTheme);
+            if (savedTheme === 'system' && window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    applyTheme('system');
                 });
-            }
-            
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-                if (localStorage.getItem('qbin-theme') === 'system' || !localStorage.getItem('qbin-theme')) {
-                    applyTheme();
-                }
-            });
-            
-            window.addEventListener('storage', (event) => {
-                if (event.key === 'qbin-theme') {
-                    applyTheme();
-                }
-            });
-            
-            window.addEventListener('themeChange', () => {
-                applyTheme();
-            });
-            
-            if (!window.qbinToggleTheme) {
-                window.qbinToggleTheme = (theme) => {
-                    localStorage.setItem('qbin-theme', theme);
-                    window.dispatchEvent(new CustomEvent('themeChange'));
-                };
             }
         })();
     </script>
-    <link href=/favicon.ico rel=icon type=image/svg+xml>
     <link href=/static/css/panel-common.css rel=stylesheet>
     <link rel="stylesheet" type="text/css"
           href="https://cdn.jsdelivr.net/npm/cherry-markdown@0.8.58/dist/cherry-markdown.min.css">
@@ -418,6 +360,7 @@
           integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="manifest" href="/manifest.json">
+    <link href=/favicon.ico rel=icon type=image/svg+xml>
     <meta name="theme-color" content="#4a6cf7">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">

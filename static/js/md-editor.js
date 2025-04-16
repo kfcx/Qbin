@@ -5,7 +5,17 @@ class QBinMDEditor extends QBinEditorBase {
         this.saveDebounceTimeout = null;
         this.uploadDebounceTimeout = null;
         this.passwordPanelInitialized = false;
+        this.currentTheme = this.getThemePreference();
         this.initialize();
+    }
+
+    getThemePreference() {
+        const savedTheme = localStorage.getItem('qbin-theme') || 'system';
+        if (savedTheme === 'dark') return 'dark';
+        if (savedTheme === 'light') return 'light';
+        // System preference:
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ?
+            'dark' : 'light';
     }
 
     toolbarsConfig(config){
@@ -76,15 +86,6 @@ class QBinMDEditor extends QBinEditorBase {
             toc: true,
         };
 
-        function getThemePreference() {
-            const savedTheme = localStorage.getItem('qbin-theme') || 'system';
-            if (savedTheme === 'dark') return 'dark';
-            if (savedTheme === 'light') return 'light';
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ?
-                'dark' : 'light';
-        }
-
-        const currentTheme = getThemePreference();
         // TODO 实现sidebar Zen模式
         const basicConfig = {
             id: 'markdown',
@@ -153,13 +154,25 @@ class QBinMDEditor extends QBinEditorBase {
                 writingStyle: 'normal',
             },
             themeSettings: {
-                mainTheme: currentTheme,
+                mainTheme: this.currentTheme,
                 codeBlockTheme: 'default',
             },
             callback: {
                 // onPaste: (clipboardData) => console.log(clipboardData),
                 afterChange: (text, html) => {
                     this.handleContentChange(text);
+                },
+            },
+            event: {
+                changeMainTheme: (theme) => {
+                    const userPreference = localStorage.getItem('qbin-theme') || 'system';
+                    if (userPreference === 'system') {
+                        localStorage.setItem('qbin-theme', 'system');
+                    }
+                    
+                    // Update document classes for consistent styling
+                    document.documentElement.classList.remove('light-theme', 'dark-theme');
+                    document.documentElement.classList.add(theme === 'dark' ? 'dark-theme' : 'light-theme');
                 }
             },
             isPreviewOnly: false,
@@ -187,9 +200,9 @@ class QBinMDEditor extends QBinEditorBase {
         window.cherry = new Cherry(config);
         this.setupEditorChangeListener();
         this.initializePasswordPanel();
+        this.setupThemeListener();
         return window.cherry;
     }
-
 
     getEditorContent() {
         return window.cherry.getMarkdown();
@@ -359,10 +372,65 @@ class QBinMDEditor extends QBinEditorBase {
     togglePasswordPanel(isClick = false) {
         const passwordPanel = document.querySelector('.password-panel');
         if (!passwordPanel) return;
-
         if (isClick) {
             passwordPanel.classList.toggle('active');
         }
+    }
+
+    applyThemeBasedOnPreference() {
+        const userPreference = localStorage.getItem('qbin-theme') || 'system';
+        let themeToApply;
+        
+        if (userPreference === 'system') {
+            // Apply theme based on system preference
+            themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        } else {
+            // Apply user's explicit choice
+            themeToApply = userPreference;
+        }
+        
+        // Let the editor handle the theme change
+        if (window.cherry && window.cherry.setTheme) {
+            // Store original theme value
+            const originalTheme = localStorage.getItem('qbin-theme');
+            
+            // Apply the theme
+            window.cherry.setTheme(themeToApply);
+            
+            // Restore "system" if that was the original preference
+            if (originalTheme === 'system') {
+                localStorage.setItem('qbin-theme', 'system');
+            }
+        }
+    }
+
+    setupThemeListener() {
+        // Listen for system preference changes
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addEventListener('change', () => {
+            // Only react to system changes if the user preference is 'system'
+            if (localStorage.getItem('qbin-theme') === 'system' || !localStorage.getItem('qbin-theme')) {
+                this.applyThemeBasedOnPreference();
+            }
+        });
+
+        // Listen for explicit theme changes from other tabs/windows
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'qbin-theme') {
+                this.applyThemeBasedOnPreference();
+            }
+        });
+
+        // Setup the global theme toggler
+        if (!window.qbinToggleTheme) {
+            window.qbinToggleTheme = (theme) => {
+                localStorage.setItem('qbin-theme', theme);
+                this.applyThemeBasedOnPreference();
+            };
+        }
+        
+        // Apply the initial theme
+        this.applyThemeBasedOnPreference();
     }
 }
 
