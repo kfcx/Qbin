@@ -1,5 +1,5 @@
 {
-  "tasks": {
+  "tasks": { 
     "start": "deno run -NER --allow-ffi --allow-sys --unstable-kv --unstable-broadcast-channel index.ts",
     "dev": "deno run -NER --allow-ffi --allow-sys --unstable-kv --unstable-broadcast-channel --watch --watch-exclude='*.ts' index.ts",
     "compile": "deno compile --target x86_64-pc-windows-msvc -NER --allow-ffi --unstable-kv --unstable-broadcast-channel --no-check --output ./release/QBin.exe --icon static\\img\\apple-icon-152.png index.ts",
