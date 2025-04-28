@@ -1,5 +1,5 @@
-import { createServer } from "./src/_server.ts";
-import { get_env } from "./src/config/env.ts";
+import { createServer } from "./_server.ts";
+import { get_env } from "./config/env.ts";
 
 /**
  * 程序入口
