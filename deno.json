@@ -17,7 +17,7 @@
     "postgres": "npm:postgres@^3.4.5",
     "pg": "npm:pg@^8.14.1"
   },
-  "entrypoint": "main.ts",
+  "importMap": "./import_map.json"
   "nodeModulesDir": "auto",
   "fmt": {
     "lineWidth": 100,
