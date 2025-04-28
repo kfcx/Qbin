@@ -17,6 +17,10 @@
     "postgres": "npm:postgres@^3.4.5",
     "pg": "npm:pg@^8.14.1"
   },
+  "deploy": {
+    "project": "qbin",
+    "entrypoint": "index.ts",
+  },
   "nodeModulesDir": "auto",
   "fmt": {
     "lineWidth": 100,
